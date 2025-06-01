@@ -3,6 +3,10 @@
 #include "iathook.h"
 #include "helpers.h"
 
+#include "../imgui/imgui.h"
+#include "../imgui/backends/imgui_impl_dx9.h"
+#include "../imgui/backends/imgui_impl_win32.h"
+
 #include "logger.h"
 
 #pragma comment(lib, "d3dx9.lib")
@@ -235,6 +239,8 @@ HRESULT m_IDirect3DDevice9Ex::EndScene()
 {
     if (bDisplayFPSCounter)
         FrameLimiter::ShowFPS(ProxyInterface);
+
+
 
     return ProxyInterface->EndScene();
 }
