@@ -1,11 +1,13 @@
-#include "d3d9.h"
+﻿#include "d3d9.h"
 #include "d3dx9.h"
 #include "iathook.h"
 #include "helpers.h"
 
-#include "../imgui/imgui.h"
-#include "../imgui/backends/imgui_impl_dx9.h"
-#include "../imgui/backends/imgui_impl_win32.h"
+// imgui
+#include "imgui_includes.h"
+bool g_ImGuiInitialized = false;
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #include "logger.h"
 
@@ -222,6 +224,29 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     else if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
         while (!FrameLimiter::Sync_SLP());
 
+    if (!g_ImGuiInitialized)
+    {
+        ImGui::CreateContext();
+        ImGui_ImplWin32_Init(g_hFocusWindow);
+        ImGui_ImplDX9_Init(ProxyInterface);
+        g_ImGuiInitialized = true;
+    }
+
+    ImVec2 size(400, 400);
+
+    ImGui_ImplDX9_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::SetNextWindowSize(size, 0);
+    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
+    ImGui::Text("FPS or Options");
+    ImGui::End();
+
+    ImGui::EndFrame();
+    ImGui::Render();
+    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
     return ProxyInterface->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
 
@@ -239,8 +264,6 @@ HRESULT m_IDirect3DDevice9Ex::EndScene()
 {
     if (bDisplayFPSCounter)
         FrameLimiter::ShowFPS(ProxyInterface);
-
-
 
     return ProxyInterface->EndScene();
 }
@@ -531,6 +554,10 @@ HRESULT m_IDirect3DDevice9Ex::ResetEx(THIS_ D3DPRESENT_PARAMETERS* pPresentation
 
 LRESULT WINAPI CustomWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, int idx)
 {
+    // imgui 
+    if (g_ImGuiInitialized && ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+        return true;
+
     if (hWnd == g_hFocusWindow || _fnIsTopLevelWindow(hWnd)) // skip child windows like buttons, edit boxes, etc.
     {
         if (bAlwaysOnTop)
@@ -1097,6 +1124,17 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
         break;
         case DLL_PROCESS_DETACH:
         {
+            // ImGui Making
+            // > Making Memory Leak <
+            /*
+            ImGui_ImplDX9_Shutdown();
+            ImGui_ImplWin32_Shutdown();
+            ImGui::DestroyContext();
+            g_ImGuiInitialized = false;
+            Logger::LogInfo() << "ImGui Shutdown" << std::endl;
+            */
+
+            // Logger 
             Logger::Shutdown();
 
             if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)

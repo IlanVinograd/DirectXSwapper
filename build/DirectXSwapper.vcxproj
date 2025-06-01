@@ -222,6 +222,14 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="..\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="..\imgui\imconfig.h" />
+    <ClInclude Include="..\imgui\imgui.h" />
+    <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="..\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\imgui\imstb_truetype.h" />
     <ClInclude Include="..\source\AddressLookupTable.h" />
     <ClInclude Include="..\source\IDirect3D9Ex.h" />
     <ClInclude Include="..\source\IDirect3DCubeTexture9.h" />
@@ -243,8 +251,17 @@
     <ClInclude Include="..\source\helpers.h" />
     <ClInclude Include="..\source\iathook.h" />
     <ClInclude Include="..\source\logger.h" />
+    <ClInclude Include="imgui_includes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\imgui\backends\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\imgui\imgui.cpp" />
+    <ClCompile Include="..\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\source\imgui_includes.h" />
     <ClCompile Include="..\source\IDirect3D9Ex.cpp" />
     <ClCompile Include="..\source\IDirect3DCubeTexture9.cpp" />
     <ClCompile Include="..\source\IDirect3DDevice9Ex.cpp" />
@@ -265,10 +282,16 @@
     <ClCompile Include="..\source\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\imgui\.editorconfig" />
+    <None Include="..\imgui\.gitattributes" />
+    <None Include="..\imgui\.gitignore" />
     <None Include="..\source\d3d9.def" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\source\VersionInfo.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\imgui\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
