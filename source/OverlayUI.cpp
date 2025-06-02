@@ -1,7 +1,7 @@
 #include "OverlayUI.h"
 
 bool g_ImGuiInitialized = false;
-bool Button_1 = true;
+bool Button_1 = false;
 
 void InitGUI(HWND& g_hFocusWindow, LPDIRECT3DDEVICE9EX& ProxyInterface) {
     if (!g_ImGuiInitialized)

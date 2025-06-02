@@ -246,6 +246,7 @@
     <ClInclude Include="..\source\IDirect3DVertexShader9.h" />
     <ClInclude Include="..\source\IDirect3DVolume9.h" />
     <ClInclude Include="..\source\IDirect3DVolumeTexture9.h" />
+    <ClInclude Include="..\source\ObjectExporter.h" />
     <ClInclude Include="..\source\VersionInfo.h" />
     <ClInclude Include="..\source\d3d9.h" />
     <ClInclude Include="..\source\helpers.h" />
@@ -280,6 +281,7 @@
     <ClCompile Include="..\source\InterfaceQuery.cpp" />
     <ClCompile Include="..\source\Logger.cpp" />
     <ClCompile Include="..\source\dllmain.cpp" />
+    <ClCompile Include="..\source\ObjectExporter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui\.editorconfig" />

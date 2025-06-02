@@ -1,6 +1,11 @@
-#include "d3d9.h"
+﻿#include "d3d9.h"
 #include "logger.h"
 #include "OverlayUI.h"
+#include "ObjectExporter.h"
+#include <unordered_set>
+
+thread_local std::vector<uint8_t> tempVB;
+thread_local std::vector<uint8_t> tempIB;
 
 HRESULT m_IDirect3DDevice9Ex::QueryInterface(REFIID riid, void** ppvObj)
 {
@@ -455,80 +460,85 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	UINT StartIndex,
 	UINT PrimitiveCount)
 {
-	static D3DPRIMITIVETYPE lastType = D3DPT_FORCE_DWORD;
-	static INT lastBaseVertexIndex = INT_MAX;
-	static UINT lastStartIndex = UINT_MAX;
-	static UINT lastPrimitiveCount = UINT_MAX;
-
-	if (Type == lastType &&
-		BaseVertexIndex == lastBaseVertexIndex &&
-		StartIndex == lastStartIndex &&
-		PrimitiveCount == lastPrimitiveCount)
-	{
+	if (!Button_1) {
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
+
+		
 	}
 
-	lastType = Type;
-	lastBaseVertexIndex = BaseVertexIndex;
-	lastStartIndex = StartIndex;
-	lastPrimitiveCount = PrimitiveCount;
 
 	LPDIRECT3DVERTEXBUFFER9 vb = nullptr;
 	UINT offset = 0, stride = 0;
-
 	if (FAILED(ProxyInterface->GetStreamSource(0, &vb, &offset, &stride)) || !vb)
-	{
-		Logger::LogError() << "FAILED TO READ FROM -> GetStreamSource()";
-		Logger::LogInfo()
-			<< "\nvb: " << std::hex << vb << std::dec
-			<< "\noffset: " << offset
-			<< "\nstride: " << stride << std::endl;
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 
+	D3DVERTEXBUFFER_DESC vbDesc = {};
+	if (FAILED(vb->GetDesc(&vbDesc)) || vbDesc.Size == 0 || stride == 0) {
+		vb->Release();
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
 
-	D3DVERTEXBUFFER_DESC desc = {};
-	if (FAILED(vb->GetDesc(&desc)) || desc.Size == 0 || stride == 0 ||
-		(BaseVertexIndex + PrimitiveCount * 3ULL) * stride > desc.Size)
-	{
-		Logger::LogError() << "FAILED TO READ FROM -> GetDesc() or buffer bounds check failed";
-		Logger::LogInfo()
-			<< "\nvb: " << std::hex << vb << std::dec
-			<< "\noffset: " << offset
-			<< "\nstride: " << stride
-			<< "\ndesc.Size: " << desc.Size
-			<< "\ncomputed size: " << (BaseVertexIndex + PrimitiveCount * 3ULL) * stride << std::endl;
-
+	if (vbDesc.Pool == D3DPOOL_DEFAULT) {
 		vb->Release();
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
 
 	void* vertexData = nullptr;
-	DWORD lockFlags = (desc.Pool == D3DPOOL_DEFAULT) ? D3DLOCK_READONLY : 0;
-
-	if (SUCCEEDED(vb->Lock(0, 0, &vertexData, lockFlags)))
-	{
-		Logger::LogInfo()
-			<< "Lock() succeeded."
-			<< "\nvertexData: " << std::hex << vertexData << std::dec
-			<< "\ndesc.Size: " << desc.Size
-			<< "\nstride: " << stride
-			<< "\noffset: " << offset << std::endl;
-
-
-		vb->Unlock();
+	DWORD vbLockFlags = (vbDesc.Pool == D3DPOOL_DEFAULT) ? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE : 0;
+	if (FAILED(vb->Lock(0, 0, &vertexData, vbLockFlags)) || !vertexData) {
+		vb->Release();
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
-	else
-	{
-		Logger::LogError() << "FAILED TO LOCK vertex buffer";
-		Logger::LogInfo()
-			<< "\nvb: " << std::hex << vb << std::dec
-			<< "\ndesc.Size: " << desc.Size
-			<< "\nstride: " << stride
-			<< "\noffset: " << offset << std::endl;
+
+	if (tempVB.size() < vbDesc.Size)
+		tempVB.resize(vbDesc.Size);
+	memcpy(tempVB.data(), vertexData, vbDesc.Size);
+
+	vb->Unlock();
+
+	LPDIRECT3DINDEXBUFFER9 ib = nullptr;
+	if (FAILED(ProxyInterface->GetIndices(&ib)) || !ib) {
+		vb->Release();
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
+
+	D3DINDEXBUFFER_DESC ibDesc = {};
+	if (FAILED(ib->GetDesc(&ibDesc)) || ibDesc.Size == 0) {
+		ib->Release();
+		vb->Release();
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
+	}
+
+	void* indexData = nullptr;
+	DWORD ibLockFlags = (ibDesc.Pool == D3DPOOL_DEFAULT) ? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE : 0;
+	if (FAILED(ib->Lock(0, 0, &indexData, ibLockFlags)) || !indexData) {
+		ib->Release();
+		vb->Release();
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
+	}
+
+	if (tempIB.size() < ibDesc.Size)
+		tempIB.resize(ibDesc.Size);
+	memcpy(tempIB.data(), indexData, ibDesc.Size);
+
+	ib->Unlock();
+	
+	ObjectDescriptor obj = {
+		.hash = 0,
+		.vertexData = std::move(tempVB),
+		.indexData = std::move(tempIB),
+		.stride = stride,
+		.primitiveType = Type,
+		.baseVertexIndex = BaseVertexIndex,
+		.startIndex = StartIndex,
+		.primitiveCount = PrimitiveCount,
+		.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
+	};
+
+	//ObjectExporter::EnqueueObject(std::move(obj));
 
 	vb->Release();
+	ib->Release();
 
 	return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 }
@@ -541,87 +551,6 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveT
 
 HRESULT m_IDirect3DDevice9Ex::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
-	//static D3DPRIMITIVETYPE lastType = D3DPT_FORCE_DWORD;
-	//static UINT lastStartVertex = UINT_MAX;
-	//static UINT lastPrimitiveCount = UINT_MAX;
-
-	//// Skip identical calls to avoid redundant logging
-	//if (PrimitiveType == lastType &&
-	//	StartVertex == lastStartVertex &&
-	//	PrimitiveCount == lastPrimitiveCount)
-	//{
-	//	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	//}
-
-	//// Update the last call state
-	//lastType = PrimitiveType;
-	//lastStartVertex = StartVertex;
-	//lastPrimitiveCount = PrimitiveCount;
-
-	//Logger::LogInfo() << "============== DrawPrimitive Called ==============" << std::endl;
-
-	//// Get vertex buffer
-	//LPDIRECT3DVERTEXBUFFER9 vb = nullptr;
-	//UINT offset = 0, stride = 0;
-
-	//if (FAILED(ProxyInterface->GetStreamSource(0, &vb, &offset, &stride)) || !vb)
-	//{
-	//	Logger::LogError() << "FAILED TO READ FROM -> GetStreamSource()";
-	//	Logger::LogInfo()
-	//		<< "\nvb: " << std::hex << vb << std::dec
-	//		<< "\noffset: " << offset
-	//		<< "\nstride: " << stride << std::endl;
-
-	//	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	//}
-
-	//// Check buffer description
-	//D3DVERTEXBUFFER_DESC desc = {};
-	//if (FAILED(vb->GetDesc(&desc)) || desc.Size == 0 || stride == 0 ||
-	//	(StartVertex + PrimitiveCount * 3ULL) * stride > desc.Size)
-	//{
-	//	Logger::LogError() << "FAILED TO READ FROM -> GetDesc() or buffer bounds check failed";
-	//	Logger::LogInfo()
-	//		<< "\nvb: " << std::hex << vb << std::dec
-	//		<< "\noffset: " << offset
-	//		<< "\nstride: " << stride
-	//		<< "\ndesc.Size: " << desc.Size
-	//		<< "\ncomputed size: " << (StartVertex + PrimitiveCount * 3ULL) * stride << std::endl;
-
-	//	vb->Release();
-	//	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	//}
-
-	//// Try to lock and read data
-	//void* vertexData = nullptr;
-	//DWORD lockFlags = (desc.Pool == D3DPOOL_DEFAULT) ? D3DLOCK_READONLY : 0;
-
-	//if (SUCCEEDED(vb->Lock(0, 0, &vertexData, lockFlags)))
-	//{
-	//	Logger::LogInfo()
-	//		<< "Lock() succeeded."
-	//		<< "\nvertexData: " << std::hex << vertexData << std::dec
-	//		<< "\ndesc.Size: " << desc.Size
-	//		<< "\nstride: " << stride
-	//		<< "\noffset: " << offset << std::endl;
-
-	//	// TODO: Parse vertexData here
-
-	//	vb->Unlock();
-	//}
-	//else 
-	//{
-	//	Logger::LogError() << "FAILED TO LOCK vertex buffer";
-	//	Logger::LogInfo()
-	//		<< "\nvb: " << std::hex << vb << std::dec
-	//		<< "\ndesc.Size: " << desc.Size
-	//		<< "\nstride: " << stride
-	//		<< "\noffset: " << offset << std::endl;
-	//}
-
-	//vb->Release();
-
-	//Logger::LogInfo() << "==================================================" << std::endl;
 	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
 }
 
