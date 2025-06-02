@@ -251,7 +251,6 @@
     <ClInclude Include="..\source\helpers.h" />
     <ClInclude Include="..\source\iathook.h" />
     <ClInclude Include="..\source\logger.h" />
-    <ClInclude Include="imgui_includes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\backends\imgui_impl_dx9.cpp" />
@@ -261,7 +260,8 @@
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\source\imgui_includes.h" />
+    <ClCompile Include="..\source\OverlayUI.cpp" />
+    <ClCompile Include="..\source\OverlayUI.h" />
     <ClCompile Include="..\source\IDirect3D9Ex.cpp" />
     <ClCompile Include="..\source\IDirect3DCubeTexture9.cpp" />
     <ClCompile Include="..\source\IDirect3DDevice9Ex.cpp" />
