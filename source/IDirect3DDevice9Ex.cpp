@@ -1,8 +1,7 @@
 ﻿#include "d3d9.h"
 #include "logger.h"
-#include "OverlayUI.h"
 #include "ObjectExporter.h"
-#include <unordered_set>
+#include "OverlayUI.h"
 
 thread_local std::vector<uint8_t> tempVB;
 thread_local std::vector<uint8_t> tempIB;
@@ -460,12 +459,18 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	UINT StartIndex,
 	UINT PrimitiveCount)
 {
-	if (!Button_1) {
-		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
-
-		
+	if (Button_1 && !g_lastButtonState) {
+		ObjectExporter::StartExportWorker();
+		Logger::LogInfo() << "ObjectExporter Thread Start" << std::endl;
 	}
+	else if (!Button_1 && g_lastButtonState) {
+		ObjectExporter::StopExportWorker();
+		Logger::LogInfo() << "ObjectExporter Thread Stop" << std::endl;
+	}
+	g_lastButtonState = Button_1;
 
+	if (!Button_1)
+		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 
 	LPDIRECT3DVERTEXBUFFER9 vb = nullptr;
 	UINT offset = 0, stride = 0;
@@ -478,14 +483,14 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
 
-	if (vbDesc.Pool == D3DPOOL_DEFAULT) {
-		vb->Release();
-		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
-	}
-
 	void* vertexData = nullptr;
-	DWORD vbLockFlags = (vbDesc.Pool == D3DPOOL_DEFAULT) ? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE : 0;
-	if (FAILED(vb->Lock(0, 0, &vertexData, vbLockFlags)) || !vertexData) {
+	DWORD vbLockFlags = (vbDesc.Pool == D3DPOOL_DEFAULT)
+		? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE
+		: 0;
+
+	HRESULT hr = vb->Lock(0, 0, &vertexData, vbLockFlags);
+	if (FAILED(hr) || !vertexData) {
+		Logger::LogInfo() << "[Skip] vb->Lock failed. Pool = " << vbDesc.Pool << ", hr = 0x" << std::hex << hr << std::endl;
 		vb->Release();
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 	}
@@ -535,7 +540,10 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 		.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
 	};
 
-	//ObjectExporter::EnqueueObject(std::move(obj));
+	
+	if (Button_1) {
+		ObjectExporter::EnqueueObject(std::move(obj));
+	}
 
 	vb->Release();
 	ib->Release();
@@ -551,6 +559,7 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveT
 
 HRESULT m_IDirect3DDevice9Ex::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
+	Logger::LogInfo() << "DrawPrimitiveUP" << std::endl;
 	return ProxyInterface->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
 }
 

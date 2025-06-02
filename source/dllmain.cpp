@@ -231,13 +231,13 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
 
     // Start Logic
 
+    Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
+
     ImGui::SetNextWindowSize(ImVec2(400, 400), 0);
     ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
 
-    if (ImGui::Button(Button_1 ? "ON " : "OFF")) {
-        Logger::LogInfo() << "Clicked: " + Button_1 << std::endl;
-        Button_1 = !Button_1;
-    }
+    ImGui::Button(Button_1 ? "CAPTURE: ON (C)" : "CAPTURE: OFF (C)");
+    ImGui::SliderInt("Filter", &Filter, 0, 16384);
 
     // End Logic
 

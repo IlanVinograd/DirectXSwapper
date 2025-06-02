@@ -9,7 +9,10 @@
 #include "d3dx9.h"
 
 extern bool g_ImGuiInitialized;
+extern bool g_lastButtonState;
 extern bool Button_1;
+
+extern int Filter;
 
 void InitGUI(HWND& g_hFocusWindow, LPDIRECT3DDEVICE9EX& ProxyInterface);
 void startFrame();

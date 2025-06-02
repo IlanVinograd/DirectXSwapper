@@ -1,5 +1,16 @@
 #pragma once
 #include <unordered_set>
+#include <queue>
+#include "d3d9.h"
+#include "d3dx9.h"
+#include "logger.h"
+#include <functional>
+#include "OverlayUI.h"
+
+#include <condition_variable>
+#include <mutex>
+#include <atomic>
+#include <thread>
 
 struct ObjectDescriptor {
 	size_t hash;
@@ -15,19 +26,22 @@ struct ObjectDescriptor {
 
 class ObjectExporter {
 public:
-	static size_t ComputeHash(const uint8_t* data, size_t size) {
-		size_t h = 0;
-		for (size_t i = 0; i < size; ++i) {
-			h ^= std::hash<uint8_t>()(data[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
-		}
-		return h;
-	}
+	static void SaveToObj(ObjectDescriptor& obj);
+	static size_t ComputeHash(const ObjectDescriptor& obj);
+	static void StartExportWorker();
+	static void StopExportWorker();
 
-	void EnqueueObject(ObjectDescriptor&& obj);
-	void StartExportWorker();
-	void StopExportWorker();
+	static void EnqueueObject(ObjectDescriptor&& obj);
+	static void ThreadMain();
 
 private:
+
 	static std::unordered_set<size_t> seenVertexHashes;
-	size_t dataHash = 0;
+
+	static std::queue<ObjectDescriptor> objectQueue;
+	static std::mutex queueMutex;
+	static std::condition_variable cv;
+	static std::atomic<bool> running;
+	static bool initialized;
+	static std::thread workerThread;
 };
