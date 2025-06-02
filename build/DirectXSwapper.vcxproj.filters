@@ -40,6 +40,8 @@
     <ClCompile Include="..\imgui\backends\imgui_impl_win32.cpp">
       <Filter>imgui\backends</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\OverlayUI.h" />
+    <ClCompile Include="..\source\OverlayUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AddressLookupTable.h" />

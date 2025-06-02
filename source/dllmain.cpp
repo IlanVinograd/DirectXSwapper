@@ -4,8 +4,7 @@
 #include "helpers.h"
 
 // imgui
-#include "imgui_includes.h"
-bool g_ImGuiInitialized = false;
+#include "OverlayUI.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -224,28 +223,26 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     else if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
         while (!FrameLimiter::Sync_SLP());
 
-    if (!g_ImGuiInitialized)
-    {
-        ImGui::CreateContext();
-        ImGui_ImplWin32_Init(g_hFocusWindow);
-        ImGui_ImplDX9_Init(ProxyInterface);
-        g_ImGuiInitialized = true;
-    }
+    InitGUI(g_hFocusWindow, ProxyInterface);
+    startFrame();
 
-    ImVec2 size(400, 400);
+    POINT pt;
+    injectMouse(g_hFocusWindow, pt);
 
-    ImGui_ImplDX9_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    // Start Logic
 
-    ImGui::SetNextWindowSize(size, 0);
+    Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
+
+    ImGui::SetNextWindowSize(ImVec2(400, 400), 0);
     ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
-    ImGui::Text("FPS or Options");
-    ImGui::End();
 
-    ImGui::EndFrame();
-    ImGui::Render();
-    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+    ImGui::Button(Button_1 ? "CAPTURE: ON (C)" : "CAPTURE: OFF (C)");
+    ImGui::SliderInt("Filter", &Filter, 0, 16384);
+
+    // End Logic
+
+    ImGui::End();
+    renderFrame();
 
     return ProxyInterface->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
@@ -556,7 +553,7 @@ LRESULT WINAPI CustomWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
     // imgui 
     if (g_ImGuiInitialized && ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-        return true;
+        return 0;
 
     if (hWnd == g_hFocusWindow || _fnIsTopLevelWindow(hWnd)) // skip child windows like buttons, edit boxes, etc.
     {
