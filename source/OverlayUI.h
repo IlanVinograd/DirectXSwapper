@@ -11,6 +11,7 @@
 extern bool g_ImGuiInitialized;
 extern bool g_lastButtonState;
 extern bool Button_1;
+extern bool Button_2;
 
 extern int Filter;
 

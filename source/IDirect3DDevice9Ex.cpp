@@ -3,7 +3,6 @@
 #include "ObjectExporter.h"
 #include "OverlayUI.h"
 
-thread_local std::vector<uint8_t> tempVB;
 thread_local std::vector<uint8_t> tempIB;
 
 HRESULT m_IDirect3DDevice9Ex::QueryInterface(REFIID riid, void** ppvObj)
@@ -477,30 +476,6 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	if (FAILED(ProxyInterface->GetStreamSource(0, &vb, &offset, &stride)) || !vb)
 		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
 
-	D3DVERTEXBUFFER_DESC vbDesc = {};
-	if (FAILED(vb->GetDesc(&vbDesc)) || vbDesc.Size == 0 || stride == 0) {
-		vb->Release();
-		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
-	}
-
-	void* vertexData = nullptr;
-	DWORD vbLockFlags = (vbDesc.Pool == D3DPOOL_DEFAULT)
-		? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE
-		: 0;
-
-	HRESULT hr = vb->Lock(0, 0, &vertexData, vbLockFlags);
-	if (FAILED(hr) || !vertexData) {
-		Logger::LogInfo() << "[Skip] vb->Lock failed. Pool = " << vbDesc.Pool << ", hr = 0x" << std::hex << hr << std::endl;
-		vb->Release();
-		return ProxyInterface->DrawIndexedPrimitive(Type, BaseVertexIndex, MinVertexIndex, NumVertices, StartIndex, PrimitiveCount);
-	}
-
-	if (tempVB.size() < vbDesc.Size)
-		tempVB.resize(vbDesc.Size);
-	memcpy(tempVB.data(), vertexData, vbDesc.Size);
-
-	vb->Unlock();
-
 	LPDIRECT3DINDEXBUFFER9 ib = nullptr;
 	if (FAILED(ProxyInterface->GetIndices(&ib)) || !ib) {
 		vb->Release();
@@ -529,17 +504,18 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	ib->Unlock();
 	
 	ObjectDescriptor obj = {
-		.hash = 0,
-		.vertexData = std::move(tempVB),
-		.indexData = std::move(tempIB),
-		.stride = stride,
-		.primitiveType = Type,
-		.baseVertexIndex = BaseVertexIndex,
-		.startIndex = StartIndex,
-		.primitiveCount = PrimitiveCount,
-		.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
+	.hash = 0,
+	.vertexData = {},
+	.indexData = std::move(tempIB),
+	.stride = stride,
+	.primitiveType = Type,
+	.baseVertexIndex = BaseVertexIndex,
+	.startIndex = StartIndex,
+	.primitiveCount = PrimitiveCount,
+	.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
 	};
 
+	if(Button_2) ObjectExporter::LockAndFillVertexBuffer(obj, vb, stride);
 	
 	if (Button_1) {
 		ObjectExporter::EnqueueObject(std::move(obj));

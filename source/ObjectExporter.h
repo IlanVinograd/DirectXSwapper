@@ -6,6 +6,10 @@
 #include "logger.h"
 #include <functional>
 #include "OverlayUI.h"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <filesystem>
 
 #include <condition_variable>
 #include <mutex>
@@ -26,7 +30,9 @@ struct ObjectDescriptor {
 
 class ObjectExporter {
 public:
-	static void SaveToObj(ObjectDescriptor& obj);
+	static void SaveToObj(ObjectDescriptor& obj, const std::string& path);
+	static void LockAndFillVertexBuffer(ObjectDescriptor& obj, LPDIRECT3DVERTEXBUFFER9 vb, UINT stride);
+
 	static size_t ComputeHash(const ObjectDescriptor& obj);
 	static void StartExportWorker();
 	static void StopExportWorker();

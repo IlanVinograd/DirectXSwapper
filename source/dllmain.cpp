@@ -237,7 +237,11 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
 
     ImGui::Button(Button_1 ? "CAPTURE: ON (C)" : "CAPTURE: OFF (C)");
-    ImGui::SliderInt("Filter", &Filter, 0, 16384);
+
+    if (ImGui::Button(Button_2 ? "START EXPORT: ON (V)" : "STOP EXPORT: OFF (V)"))
+        Button_2 = !Button_2;
+
+    ImGui::SliderInt("Filter", &Filter, 0, 1000000);
 
     // End Logic
 

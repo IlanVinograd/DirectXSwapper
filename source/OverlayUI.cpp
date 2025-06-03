@@ -3,8 +3,9 @@
 bool g_lastButtonState = false;
 bool g_ImGuiInitialized = false;
 bool Button_1 = false;
+bool Button_2 = false;
 
-extern int Filter = 0;
+int Filter = 0;
 
 void InitGUI(HWND& g_hFocusWindow, LPDIRECT3DDEVICE9EX& ProxyInterface) {
     if (!g_ImGuiInitialized)
