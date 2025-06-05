@@ -42,6 +42,7 @@ public:
 
 	static void resetHashes();
 
+	static std::atomic<bool> running;
 private:
 
 	static std::unordered_set<size_t> seenVertexHashes;
@@ -49,7 +50,6 @@ private:
 	static std::queue<ObjectDescriptor> objectQueue;
 	static std::mutex queueMutex;
 	static std::condition_variable cv;
-	static std::atomic<bool> running;
 	static bool initialized;
 	static std::thread workerThread;
 };

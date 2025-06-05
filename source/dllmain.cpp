@@ -234,7 +234,7 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
 
     Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
 
-    ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(650, 600), ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
 
@@ -555,7 +555,7 @@ LRESULT WINAPI CustomWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
     // imgui 
     if (g_ImGuiInitialized && ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-        return 0;
+        return true;
 
     if (hWnd == g_hFocusWindow || _fnIsTopLevelWindow(hWnd)) // skip child windows like buttons, edit boxes, etc.
     {
