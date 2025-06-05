@@ -4,8 +4,7 @@
 #include "helpers.h"
 
 // imgui
-#include "imgui_includes.h"
-bool g_ImGuiInitialized = false;
+#include "OverlayUI.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -224,28 +223,28 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     else if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
         while (!FrameLimiter::Sync_SLP());
 
-    if (!g_ImGuiInitialized)
-    {
-        ImGui::CreateContext();
-        ImGui_ImplWin32_Init(g_hFocusWindow);
-        ImGui_ImplDX9_Init(ProxyInterface);
-        g_ImGuiInitialized = true;
-    }
+    InitGUI(g_hFocusWindow, ProxyInterface);
 
-    ImVec2 size(400, 400);
+    startFrame();
 
-    ImGui_ImplDX9_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    POINT pt;
+    injectMouse(g_hFocusWindow, pt);
+ 
+    // Start Logic
 
-    ImGui::SetNextWindowSize(size, 0);
-    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
-    ImGui::Text("FPS or Options");
+    Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
+
+    ImGui::SetNextWindowSize(ImVec2(650, 600), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
+
+    menuBar();
+    menuTab();
+
+    // End Logic
+
     ImGui::End();
-
-    ImGui::EndFrame();
-    ImGui::Render();
-    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+    renderFrame();
 
     return ProxyInterface->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }

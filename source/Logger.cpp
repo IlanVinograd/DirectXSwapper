@@ -10,6 +10,9 @@ std::thread Logger::workerThread;
 std::atomic<bool> Logger::running = false;
 bool Logger::initialized = false;
 
+std::deque<std::string> Logger::inMemoryLog;
+std::mutex Logger::memoryLogMutex;
+
 void Logger::Init(const std::string& filename) {
     if (initialized) return;
 
@@ -78,12 +81,20 @@ void Logger::Write(Level lvl, const std::string& msg) {
 
     std::ostringstream fullMessage;
     fullMessage << timeBuf << " " << levelStr << " " << msg;
+    std::string finalMsg = fullMessage.str();
 
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        messageQueue.push(fullMessage.str());
+        messageQueue.push(finalMsg);
     }
     cv.notify_one();
+
+    {
+        std::lock_guard<std::mutex> lock(memoryLogMutex);
+        inMemoryLog.push_back(finalMsg);
+        if (inMemoryLog.size() > 1000)
+            inMemoryLog.pop_front();
+    }
 }
 
 void Logger::ThreadMain() {
@@ -103,3 +114,17 @@ Logger::LogStream Logger::LogDebug() { return LogStream(Level::Debug); }
 Logger::LogStream Logger::LogInfo() { return LogStream(Level::Info); }
 Logger::LogStream Logger::LogWarning() { return LogStream(Level::Warning); }
 Logger::LogStream Logger::LogError() { return LogStream(Level::Error); }
+
+const std::deque<std::string>& Logger::GetLogBuffer() {
+    return inMemoryLog;
+}
+
+std::vector<std::string> Logger::CopyLogBuffer() {
+    std::lock_guard<std::mutex> lock(memoryLogMutex);
+    return std::vector<std::string>(inMemoryLog.begin(), inMemoryLog.end());
+}
+
+void Logger::ClearLogBuffer() {
+    std::lock_guard<std::mutex> lock(memoryLogMutex);
+    inMemoryLog.clear();
+}
