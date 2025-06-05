@@ -230,3 +230,7 @@ void ObjectExporter::ThreadMain() {
 		}
 	}
 }
+
+void ObjectExporter::resetHashes() {
+	seenVertexHashes.clear();
+}

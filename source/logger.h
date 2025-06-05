@@ -47,6 +47,9 @@ public:
     static LogStream LogWarning();
     static LogStream LogError();
 
+    static const std::deque<std::string>& GetLogBuffer();
+    static std::vector<std::string> CopyLogBuffer();
+    static void ClearLogBuffer();
 private:
     static void Write(Level lvl, const std::string& msg);
     static void ThreadMain();
@@ -58,4 +61,7 @@ private:
     static std::thread workerThread;
     static std::atomic<bool> running;
     static bool initialized;
+
+    static std::deque<std::string> inMemoryLog;
+    static std::mutex memoryLogMutex;
 };

@@ -224,24 +224,22 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
         while (!FrameLimiter::Sync_SLP());
 
     InitGUI(g_hFocusWindow, ProxyInterface);
+
     startFrame();
 
     POINT pt;
     injectMouse(g_hFocusWindow, pt);
-
+ 
     // Start Logic
 
     Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
 
-    ImGui::SetNextWindowSize(ImVec2(400, 400), 0);
-    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
+    ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
 
-    ImGui::Button(Button_1 ? "CAPTURE: ON (C)" : "CAPTURE: OFF (C)");
-
-    if (ImGui::Button(Button_2 ? "START EXPORT: ON (V)" : "STOP EXPORT: OFF (V)"))
-        Button_2 = !Button_2;
-
-    ImGui::SliderInt("Filter", &Filter, 0, 1000000);
+    menuBar();
+    menuTab();
 
     // End Logic
 

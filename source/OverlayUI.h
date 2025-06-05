@@ -8,10 +8,15 @@
 #include "d3d9.h"
 #include "d3dx9.h"
 
+#include "ObjectExporter.h"
+#include "logger.h"
+
 extern bool g_ImGuiInitialized;
 extern bool g_lastButtonState;
 extern bool Button_1;
 extern bool Button_2;
+
+extern ImFont* g_FontLarge;
 
 extern int Filter;
 
@@ -19,3 +24,6 @@ void InitGUI(HWND& g_hFocusWindow, LPDIRECT3DDEVICE9EX& ProxyInterface);
 void startFrame();
 void renderFrame();
 void injectMouse(HWND& g_hFocusWindow, POINT& pt);
+void menuBar();
+void menuTab();
+void fontSize(float font_size);

@@ -40,6 +40,8 @@ public:
 	static void EnqueueObject(ObjectDescriptor&& obj);
 	static void ThreadMain();
 
+	static void resetHashes();
+
 private:
 
 	static std::unordered_set<size_t> seenVertexHashes;
