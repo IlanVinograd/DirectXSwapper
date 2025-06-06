@@ -9,64 +9,144 @@ std::atomic<bool> ObjectExporter::running = false;
 std::thread ObjectExporter::workerThread;
 std::unordered_set<size_t> ObjectExporter::seenVertexHashes;
 
-size_t ObjectExporter::ComputeHash(const ObjectDescriptor& obj) {
-    size_t hash = 0;
+thread_local std::vector<uint8_t> tempVB;
 
-    auto combine = [&](size_t value) {
-        hash ^= std::hash<size_t>{}(value)+0x9e3779b9 + (hash << 6) + (hash >> 2);
-        };
+void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
+	if (obj.vertexData.empty() || obj.indexData.empty() || obj.stride < 12) {
+		Logger::LogInfo() << "[SaveToObj] Invalid or empty data.";
+		return;
+	}
 
-    std::vector<uint32_t> usedIndices;
-    const size_t indexCount = obj.primitiveCount * 3;
+	std::ofstream file(path);
+	if (!file.is_open()) {
+		Logger::LogInfo() << "[SaveToObj] Failed to open file: " << path;
+		return;
+	}
 
-    if (obj.index32bit) {
-        const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
-        for (size_t i = 0; i < indexCount; ++i) {
-            size_t idx = obj.startIndex + i;
-            if (idx < obj.indexData.size() / sizeof(uint32_t)) {
-                usedIndices.push_back(indices[idx]);
-            }
-        }
-    }
-    else {
-        const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
-        for (size_t i = 0; i < indexCount; ++i) {
-            size_t idx = obj.startIndex + i;
-            if (idx < obj.indexData.size() / sizeof(uint16_t)) {
-                usedIndices.push_back(static_cast<uint32_t>(indices[idx]));
-            }
-        }
-    }
+	const size_t vertexCount = obj.vertexData.size() / obj.stride;
+	const size_t indexCount = obj.primitiveCount * 3;
 
-    combine(std::hash<std::string_view>{}(
-        std::string_view(reinterpret_cast<const char*>(usedIndices.data()), usedIndices.size() * sizeof(uint32_t))));
+	bool hasNormals = obj.stride >= 24;
+	bool hasUVs = obj.stride >= 32;
 
-    std::unordered_set<uint32_t> uniqueVertexIndices(usedIndices.begin(), usedIndices.end());
+	for (size_t i = 0; i < vertexCount; ++i) {
+		const uint8_t* base = &obj.vertexData[i * obj.stride];
+		const float* pos = reinterpret_cast<const float*>(base + 0);
+		file << std::fixed << std::setprecision(6);
+		file << "v " << pos[0] << " " << pos[2] << " " << -pos[1] << "\n";
 
-    std::vector<std::byte> usedVertexData;
-    for (uint32_t idx : uniqueVertexIndices) {
-        size_t vertexOffset = (obj.baseVertexIndex + idx) * obj.stride;
-        if (vertexOffset + obj.stride <= obj.vertexData.size()) {
-            const std::byte* vertexPtr = reinterpret_cast<const std::byte*>(obj.vertexData.data()) + vertexOffset;
-            usedVertexData.insert(usedVertexData.end(), vertexPtr, vertexPtr + obj.stride);
-        }
-    }
+		if (hasNormals) {
+			const float* norm = reinterpret_cast<const float*>(base + 12);
+			file << "vn " << norm[0] << " " << norm[2] << " " << -norm[1] << "\n";
+		}
+		if (hasUVs) {
+			const float* uv = reinterpret_cast<const float*>(base + 24);
+			file << "vt " << uv[0] << " " << uv[1] << "\n";
+		}
+	}
 
-    combine(std::hash<std::string_view>{}(
-        std::string_view(reinterpret_cast<const char*>(usedVertexData.data()), usedVertexData.size())));
+	auto writeFace = [&](uint32_t i0, uint32_t i1, uint32_t i2) {
+		auto formatIndex = [&](uint32_t idx) -> std::string {
+			idx += 1; // OBJ is 1-based
+			if (hasNormals && hasUVs)    return std::to_string(idx) + "/" + std::to_string(idx) + "/" + std::to_string(idx);
+			if (hasUVs)                  return std::to_string(idx) + "/" + std::to_string(idx);
+			if (hasNormals)              return std::to_string(idx) + "//" + std::to_string(idx);
+			return std::to_string(idx);
+			};
+		file << "f " << formatIndex(i0) << " " << formatIndex(i1) << " " << formatIndex(i2) << "\n";
+		};
 
-    combine(obj.stride);
-    combine(obj.baseVertexIndex);
-    combine(obj.startIndex);
-    combine(obj.primitiveCount);
-    combine(obj.primitiveType);
-    combine(obj.index32bit ? 1 : 0);
-
-    return hash;
+	if (obj.index32bit) {
+		const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
+		for (size_t i = 0; i < indexCount; i += 3) {
+			uint32_t i0 = indices[obj.startIndex + i + 0];
+			uint32_t i1 = indices[obj.startIndex + i + 1];
+			uint32_t i2 = indices[obj.startIndex + i + 2];
+			writeFace(i0, i1, i2);
+		}
+	}
+	else {
+		const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
+		for (size_t i = 0; i < indexCount; i += 3) {
+			uint32_t i0 = static_cast<uint32_t>(indices[obj.startIndex + i + 0]);
+			uint32_t i1 = static_cast<uint32_t>(indices[obj.startIndex + i + 1]);
+			uint32_t i2 = static_cast<uint32_t>(indices[obj.startIndex + i + 2]);
+			writeFace(i0, i1, i2);
+		}
+	}
 }
 
-void SaveToObj(ObjectDescriptor& obj) {
+void ObjectExporter::LockAndFillVertexBuffer(ObjectDescriptor& obj, LPDIRECT3DVERTEXBUFFER9 vb, UINT stride) {
+	if (!vb || stride == 0)
+		return;
 
+	D3DVERTEXBUFFER_DESC vbDesc = {};
+	if (FAILED(vb->GetDesc(&vbDesc)) || vbDesc.Size == 0)
+		return;
+
+	void* vertexData = nullptr;
+	DWORD vbLockFlags = (vbDesc.Pool == D3DPOOL_DEFAULT)
+		? D3DLOCK_READONLY | D3DLOCK_NOOVERWRITE
+		: 0;
+
+	HRESULT hr = vb->Lock(0, 0, &vertexData, vbLockFlags);
+	if (FAILED(hr) || !vertexData) {
+		Logger::LogInfo() << "[Skip] vb->Lock failed. Pool = " << vbDesc.Pool << ", hr = 0x" << std::hex << hr << std::endl;
+		return;
+	}
+
+	if (tempVB.size() < vbDesc.Size)
+		tempVB.resize(vbDesc.Size);
+
+	memcpy(tempVB.data(), vertexData, vbDesc.Size);
+	vb->Unlock();
+
+	obj.vertexData.assign(tempVB.begin(), tempVB.begin() + vbDesc.Size);
+}
+
+size_t ObjectExporter::ComputeHash(const ObjectDescriptor& obj) {
+	size_t hash = 0;
+
+	auto combine = [&](size_t value) {
+		hash ^= std::hash<size_t>{}(value)+0x9e3779b9 + (hash << 6) + (hash >> 2);
+		};
+
+	std::unordered_set<uint32_t> uniqueIndices;
+	const size_t indexCount = obj.primitiveCount * 3;
+
+	if (obj.index32bit) {
+		const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
+		for (size_t i = 0; i < indexCount; ++i) {
+			size_t idx = obj.startIndex + i;
+			if (idx < obj.indexData.size() / sizeof(uint32_t)) {
+				uniqueIndices.insert(indices[idx]);
+			}
+		}
+	}
+	else {
+		const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
+		for (size_t i = 0; i < indexCount; ++i) {
+			size_t idx = obj.startIndex + i;
+			if (idx < obj.indexData.size() / sizeof(uint16_t)) {
+				uniqueIndices.insert(static_cast<uint32_t>(indices[idx]));
+			}
+		}
+	}
+
+	std::vector<uint32_t> sortedIndices(uniqueIndices.begin(), uniqueIndices.end());
+	std::sort(sortedIndices.begin(), sortedIndices.end());
+
+	combine(std::hash<std::string_view>{}(
+		std::string_view(reinterpret_cast<const char*>(sortedIndices.data()), sortedIndices.size() * sizeof(uint32_t))));
+
+	combine(obj.stride);
+	combine(obj.baseVertexIndex);
+	combine(obj.startIndex);
+	combine(obj.primitiveCount);
+	combine(obj.primitiveType);
+	combine(obj.index32bit ? 1 : 0);
+
+	return hash;
 }
 
 void ObjectExporter::EnqueueObject(ObjectDescriptor&& obj) {
@@ -116,7 +196,13 @@ void ObjectExporter::ThreadMain() {
 
 			if (!seenVertexHashes.contains(obj.hash)) {
 				seenVertexHashes.insert(obj.hash);
-				// Save obj...
+
+				if (Button_2) {
+					Logger::LogInfo() << "OBJ EXPORT";
+					std::string folder = "exported/";
+					std::filesystem::create_directories(folder);
+					SaveToObj(obj, folder + std::to_string(obj.hash) + "_model.obj");
+				}
 
 				Logger::LogInfo()  << "======== Object #" << logId++ << " ========";
 				Logger::LogInfo() << "Hash: " << obj.hash;
@@ -143,4 +229,8 @@ void ObjectExporter::ThreadMain() {
 			lock.lock();
 		}
 	}
+}
+
+void ObjectExporter::resetHashes() {
+	seenVertexHashes.clear();
 }

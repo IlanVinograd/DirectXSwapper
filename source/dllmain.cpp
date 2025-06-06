@@ -224,22 +224,24 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
         while (!FrameLimiter::Sync_SLP());
 
     InitGUI(g_hFocusWindow, ProxyInterface);
+
     startFrame();
 
     POINT pt;
     injectMouse(g_hFocusWindow, pt);
-
+ 
     // Start Logic
 
     Button_1 = (GetAsyncKeyState('C') & 0x8000) != 0;
 
-    ImGui::SetNextWindowSize(ImVec2(400, 400), 0);
-    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize);
+    ImGui::SetNextWindowSize(ImVec2(650, 600), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    ImGui::Begin("Overlay", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
 
-    ImGui::Button(Button_1 ? "CAPTURE: ON (C)" : "CAPTURE: OFF (C)");
-    ImGui::SliderInt("Filter", &Filter, 0, 16384);
+    menuBar();
+    menuTab();
 
-    // End Logic
+    //// End Logic
 
     ImGui::End();
     renderFrame();
@@ -1053,6 +1055,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
                 nForceWindowStyle = GetPrivateProfileInt("FORCEWINDOWED", "ForceWindowStyle", 0, path);
                 bCaptureMouse = GetPrivateProfileInt("FORCEWINDOWED", "CaptureMouse", 0, path) != 0;
 
+                Logger::LogInfo() << "INIT ALL HOOKS" << std::endl;
+
                 if (fFPSLimit > 0.0f)
                 {
                     FrameLimiter::FPSLimitMode mode = (GetPrivateProfileInt("MAIN", "FPSLimitMode", 1, path) == 2) ? FrameLimiter::FPSLimitMode::FPS_ACCURATE : FrameLimiter::FPSLimitMode::FPS_REALTIME;
@@ -1061,6 +1065,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
                     FrameLimiter::Init(mode);
                     mFPSLimitMode = mode;
+
+                    Logger::LogInfo() << "FPSLimitMode" << std::endl;
                 }
                 else
                     mFPSLimitMode = FrameLimiter::FPSLimitMode::FPS_NONE;
@@ -1084,6 +1090,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
                     Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress);
                     Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress, d3d9dll);
+
+                    Logger::LogInfo() << "INIT ALL DETOURS" << std::endl;
 
                     if (oGetForegroundWindow == NULL)
                         oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);
