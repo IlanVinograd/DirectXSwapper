@@ -59,6 +59,7 @@ void menuTab() {
     if (ImGui::BeginTabBar("Tabs")) {
         if (ImGui::BeginTabItem("Geometry")) {
             geometryLogic();
+            ImGui::EndTabItem();
         }
 
         if (ImGui::BeginTabItem("Textures")) {
@@ -139,116 +140,133 @@ void debugLogic() {
 }
 
 void geometryLogic() {
-    ImGui::Button(Button_1 ? "CAPTURE: ON  (C)" : "CAPTURE: OFF (C)");
-
-    if (ObjectExporter::running)
-    {
-        ImGui::SameLine();
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
-        ImGui_Spinner("ExportSpinner", 8.0f, 2.0f, IM_COL32(100, 255, 255, 255));
-    }
-
-    ImGui::Separator();
-
-    if (ImGui::Button(Button_2 ? "START EXPORT: ON" : "STOP EXPORT: OFF"))
-        Button_2 = !Button_2;
-
-    ImGui::Text("Filter");
-    ImGui::SliderInt("Object Size", &Filter, 0, 1000000);
-
-    ImGui::Separator();
-
-    if (ImGui::Button("Reset Hashes")) {
-        ObjectExporter::resetHashes();
-    }
-
-    ImGui::Separator();
-
-    enum SortMode { ByName, BySize, ByDate };
-    static SortMode sortMode = ByName;
-    ImGui::Combo("Sort by", (int*)&sortMode, "Name\0Size\0Date\0");
-
-    struct FileInfo {
-        std::string name;
-        uintmax_t size;
-        std::filesystem::file_time_type time;
-    };
-
-    std::vector<FileInfo> fileInfos;
-    for (const auto& entry : fs::directory_iterator("Exported")) {
-        if (entry.path().extension() == ".obj") {
-            FileInfo info;
-            info.name = entry.path().filename().string();
-            info.size = std::filesystem::file_size(entry.path());
-            info.time = std::filesystem::last_write_time(entry.path());
-            fileInfos.push_back(info);
-        }
-    }
-
-    std::sort(fileInfos.begin(), fileInfos.end(), [&](const FileInfo& a, const FileInfo& b) {
-        if (sortMode == ByName)
-            return a.name < b.name;
-        if (sortMode == BySize)
-            return a.size > b.size;
-        if (sortMode == ByDate)
-            return a.time > b.time;
-        return false;
-        });
-
-    ImGui::Text("Exported .obj files:");
-    if (ImGui::BeginListBox("##obj_listbox", ImVec2(-FLT_MIN, 200))) {
-        for (size_t i = 0; i < fileInfos.size(); ++i) {
-            const bool is_selected = (selectedObjIndex == static_cast<int>(i));
-
-            std::time_t t = FileTimeToTimeT(fileInfos[i].time);
-            char timeBuf[32];
-            ctime_s(timeBuf, sizeof(timeBuf), &t);
-            timeBuf[strcspn(timeBuf, "\n")] = 0;
-
-            std::string label = fileInfos[i].name +
-                " | " + std::to_string(fileInfos[i].size / 1024) + " KB" +
-                " | " + timeBuf;
-
-            if (ImGui::Selectable(label.c_str(), is_selected)) {
-                selectedObjIndex = static_cast<int>(i);
+    try {
+        std::error_code ec;
+        if (!std::filesystem::exists("Exported")) {
+            std::filesystem::create_directory("Exported", ec);
+            if (ec) {
+                Logger::LogInfo() << "[geometryLogic] Failed to create Exported/: " << ec.message();
             }
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndListBox();
-    }
-
-    if (selectedObjIndex >= 0 && static_cast<size_t>(selectedObjIndex) < fileInfos.size()) {
-        const std::string& selectedName = fileInfos[selectedObjIndex].name;
-        std::string fullPath = std::filesystem::absolute("Exported/" + selectedName).string();
-
-        if (ImGui::Button("Open in Explorer")) {
-            ShellExecuteA(nullptr, "open", "explorer.exe", ("/select,\"" + fullPath + "\"").c_str(), nullptr, SW_SHOWNORMAL);
         }
 
-        ImGui::SameLine();
+        ImGui::Button(Button_1 ? "CAPTURE: ON  (C)" : "CAPTURE: OFF (C)");
 
-        if (ImGui::Button("Open in 3DViewer.net")) {
-            ShellExecuteA(nullptr, "open", "https://3dviewer.net", nullptr, nullptr, SW_SHOWNORMAL);
+        if (ObjectExporter::running) {
+            ImGui::SameLine();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+            ImGui_Spinner("ExportSpinner", 8.0f, 2.0f, IM_COL32(100, 255, 255, 255));
         }
 
-        ImGui::SameLine();
+        ImGui::Separator();
 
-        if (ImGui::Button("Delete Selected")) {
-            std::filesystem::remove("Exported/" + selectedName);
+        if (ImGui::Button(Button_2 ? "START EXPORT: ON" : "STOP EXPORT: OFF"))
+            Button_2 = !Button_2;
+
+        ImGui::Text("Filter");
+        ImGui::SliderInt("Object Size", &Filter, 0, 1000000);
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Reset Hashes")) {
+            ObjectExporter::resetHashes();
+        }
+
+        ImGui::Separator();
+
+        enum SortMode { ByName, BySize, ByDate };
+        static SortMode sortMode = ByName;
+        ImGui::Combo("Sort by", (int*)&sortMode, "Name\0Size\0Date\0");
+
+        struct FileInfo {
+            std::string name;
+            uintmax_t size;
+            std::filesystem::file_time_type time;
+        };
+
+        std::vector<FileInfo> fileInfos;
+
+        if (std::filesystem::exists("Exported")) {
+            for (const auto& entry : std::filesystem::directory_iterator("Exported")) {
+                if (entry.path().extension() == ".obj") {
+                    FileInfo info;
+                    info.name = entry.path().filename().string();
+                    info.size = std::filesystem::file_size(entry.path(), ec);
+                    info.time = std::filesystem::last_write_time(entry.path(), ec);
+                    fileInfos.push_back(info);
+                }
+            }
+        }
+
+        std::sort(fileInfos.begin(), fileInfos.end(), [&](const FileInfo& a, const FileInfo& b) {
+            if (sortMode == ByName)
+                return a.name < b.name;
+            if (sortMode == BySize)
+                return a.size > b.size;
+            if (sortMode == ByDate)
+                return a.time > b.time;
+            return false;
+            });
+
+        ImGui::Text("Exported .obj files:");
+        if (ImGui::BeginListBox("##obj_listbox", ImVec2(-FLT_MIN, 200))) {
+            for (size_t i = 0; i < fileInfos.size(); ++i) {
+                const bool is_selected = (selectedObjIndex == static_cast<int>(i));
+
+                std::time_t t = FileTimeToTimeT(fileInfos[i].time);
+                char timeBuf[32];
+                ctime_s(timeBuf, sizeof(timeBuf), &t);
+                timeBuf[strcspn(timeBuf, "\n")] = 0;
+
+                std::string label = fileInfos[i].name +
+                    " | " + std::to_string(fileInfos[i].size / 1024) + " KB" +
+                    " | " + timeBuf;
+
+                if (ImGui::Selectable(label.c_str(), is_selected)) {
+                    selectedObjIndex = static_cast<int>(i);
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndListBox();
+        }
+
+        if (selectedObjIndex >= 0 && static_cast<size_t>(selectedObjIndex) < fileInfos.size()) {
+            const std::string& selectedName = fileInfos[selectedObjIndex].name;
+            std::string fullPath = std::filesystem::absolute("Exported/" + selectedName).string();
+
+            if (ImGui::Button("Open in Explorer")) {
+                std::string explorerArg = "/select,\"" + fullPath + "\"";
+                ShellExecuteA(nullptr, "open", "explorer.exe", explorerArg.c_str(), nullptr, SW_SHOWNORMAL);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Open in 3DViewer.net")) {
+                ShellExecuteA(nullptr, "open", "https://3dviewer.net", nullptr, nullptr, SW_SHOWNORMAL);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Delete Selected")) {
+                std::filesystem::remove("Exported/" + selectedName, ec);
+                selectedObjIndex = -1;
+            }
+        }
+
+        if (ImGui::Button("Delete All")) {
+            for (const auto& info : fileInfos) {
+                std::filesystem::remove("Exported/" + info.name, ec);
+            }
             selectedObjIndex = -1;
         }
 
     }
-
-    if (ImGui::Button("Delete All")) {
-        for (const auto& info : fileInfos) {
-            std::filesystem::remove("Exported/" + info.name);
-        }
-        selectedObjIndex = -1;
+    catch (const std::exception& e) {
+        Logger::LogInfo() << "[geometryLogic] Exception: " << e.what();
     }
-
-    ImGui::EndTabItem();
+    catch (...) {
+        Logger::LogInfo() << "[geometryLogic] Unknown exception occurred.";
+    }
 }
 
 std::time_t FileTimeToTimeT(std::filesystem::file_time_type fileTime) {

@@ -241,7 +241,7 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     menuBar();
     menuTab();
 
-    // End Logic
+    //// End Logic
 
     ImGui::End();
     renderFrame();
@@ -555,7 +555,7 @@ LRESULT WINAPI CustomWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
     // imgui 
     if (g_ImGuiInitialized && ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-        return true;
+        return 0;
 
     if (hWnd == g_hFocusWindow || _fnIsTopLevelWindow(hWnd)) // skip child windows like buttons, edit boxes, etc.
     {
@@ -1055,6 +1055,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
                 nForceWindowStyle = GetPrivateProfileInt("FORCEWINDOWED", "ForceWindowStyle", 0, path);
                 bCaptureMouse = GetPrivateProfileInt("FORCEWINDOWED", "CaptureMouse", 0, path) != 0;
 
+                Logger::LogInfo() << "INIT ALL HOOKS" << std::endl;
+
                 if (fFPSLimit > 0.0f)
                 {
                     FrameLimiter::FPSLimitMode mode = (GetPrivateProfileInt("MAIN", "FPSLimitMode", 1, path) == 2) ? FrameLimiter::FPSLimitMode::FPS_ACCURATE : FrameLimiter::FPSLimitMode::FPS_REALTIME;
@@ -1063,6 +1065,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
                     FrameLimiter::Init(mode);
                     mFPSLimitMode = mode;
+
+                    Logger::LogInfo() << "FPSLimitMode" << std::endl;
                 }
                 else
                     mFPSLimitMode = FrameLimiter::FPSLimitMode::FPS_NONE;
@@ -1086,6 +1090,8 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
                     Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress);
                     Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress, d3d9dll);
+
+                    Logger::LogInfo() << "INIT ALL DETOURS" << std::endl;
 
                     if (oGetForegroundWindow == NULL)
                         oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);

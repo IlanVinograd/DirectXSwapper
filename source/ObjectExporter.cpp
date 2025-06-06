@@ -33,11 +33,11 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 		const uint8_t* base = &obj.vertexData[i * obj.stride];
 		const float* pos = reinterpret_cast<const float*>(base + 0);
 		file << std::fixed << std::setprecision(6);
-		file << "v " << pos[0] << " " << pos[1] << " " << pos[2] << "\n";
+		file << "v " << pos[0] << " " << pos[2] << " " << -pos[1] << "\n";
 
 		if (hasNormals) {
 			const float* norm = reinterpret_cast<const float*>(base + 12);
-			file << "vn " << norm[0] << " " << norm[1] << " " << norm[2] << "\n";
+			file << "vn " << norm[0] << " " << norm[2] << " " << -norm[1] << "\n";
 		}
 		if (hasUVs) {
 			const float* uv = reinterpret_cast<const float*>(base + 24);
