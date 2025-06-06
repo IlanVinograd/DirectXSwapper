@@ -50,7 +50,6 @@ private:
 	static std::queue<ObjectDescriptor> objectQueue;
 	static std::mutex queueMutex;
 	static std::condition_variable cv;
-
 	static bool initialized;
 	static std::thread workerThread;
 };
