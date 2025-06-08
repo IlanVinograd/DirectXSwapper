@@ -32,7 +32,7 @@
 ## Output
 
 - Geometry: `.obj` files are saved to `Exported/`
-- Textures: `.png` files are saved to `Exported/Textures/`
+- Textures: `.png` files are saved to `Textures/`
 
 ## Planned Features
 
