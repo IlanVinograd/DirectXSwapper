@@ -4,8 +4,8 @@
 
 ## Preview
 
-![Preview](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation3.gif)  
-![Preview](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Portal%20gun.png)
+![https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation3.gif](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation4.gif)
+![https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Portal%20gun.png](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/img.png)
 
 ## Project Updates
 
