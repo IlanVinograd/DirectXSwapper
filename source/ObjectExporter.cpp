@@ -41,7 +41,7 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 		}
 		if (hasUVs) {
 			const float* uv = reinterpret_cast<const float*>(base + 24);
-			file << "vt " << uv[0] << " " << uv[1] << "\n";
+			file << "vt " << uv[1] << " " << 1.0f - uv[2] << "\n";
 		}
 	}
 

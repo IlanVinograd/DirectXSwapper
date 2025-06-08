@@ -654,37 +654,105 @@ HRESULT m_IDirect3DDevice9Ex::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGES
 	return ProxyInterface->SetTextureStageState(Stage, Type, Value);
 }
 
-HRESULT m_IDirect3DDevice9Ex::UpdateTexture(IDirect3DBaseTexture9 *pSourceTexture, IDirect3DBaseTexture9 *pDestinationTexture)
+HRESULT m_IDirect3DDevice9Ex::UpdateTexture(IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
 	if (pSourceTexture)
 	{
 		switch (pSourceTexture->GetType())
 		{
 		case D3DRTYPE_TEXTURE:
-			pSourceTexture = static_cast<m_IDirect3DTexture9 *>(pSourceTexture)->GetProxyInterface();
+		{
+			pSourceTexture = static_cast<m_IDirect3DTexture9*>(pSourceTexture)->GetProxyInterface();
+
+			IDirect3DSurface9* surface = nullptr;
+			if (SUCCEEDED(static_cast<IDirect3DTexture9*>(pSourceTexture)->GetSurfaceLevel(0, &surface)))
+			{
+				D3DSURFACE_DESC desc;
+				if (SUCCEEDED(surface->GetDesc(&desc)))
+				{
+					Logger::LogInfo() << "[UpdateTexture] Format: 0x" << std::hex << desc.Format
+						<< ", Width: " << std::dec << desc.Width
+						<< ", Height: " << desc.Height;
+
+					if (desc.Format == D3DFMT_DXT1 || desc.Format == D3DFMT_DXT5)
+					{
+						IDirect3DTexture9* systemMemTex = nullptr;
+						HRESULT hr = ProxyInterface->CreateTexture(
+							desc.Width,
+							desc.Height,
+							1,
+							0,
+							desc.Format,
+							D3DPOOL_SYSTEMMEM,
+							&systemMemTex,
+							nullptr
+						);
+
+						if (SUCCEEDED(hr))
+						{
+							IDirect3DSurface9* srcSurface = nullptr;
+							IDirect3DSurface9* dstSurface = nullptr;
+
+							if (SUCCEEDED(static_cast<IDirect3DTexture9*>(pSourceTexture)->GetSurfaceLevel(0, &srcSurface)) &&
+								SUCCEEDED(systemMemTex->GetSurfaceLevel(0, &dstSurface)))
+							{
+								if (SUCCEEDED(D3DXLoadSurfaceFromSurface(dstSurface, nullptr, nullptr, srcSurface, nullptr, nullptr, D3DX_DEFAULT, 0)))
+								{
+									static int texId = 0;
+									std::string folder = "Textures/";
+
+									CreateDirectoryA(folder.c_str(), nullptr);
+
+									std::string fileName = folder + "Texture_" + std::to_string(texId++) + ".png";
+
+									HRESULT saveHr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_PNG, systemMemTex, nullptr);
+									if (SUCCEEDED(saveHr))
+										Logger::LogInfo() << "[UpdateTexture] Saved: " << fileName;
+									else
+										Logger::LogError() << "[UpdateTexture] Failed to save DDS to: " << fileName << ", HRESULT: 0x" << std::hex << saveHr;
+								}
+
+								dstSurface->Release();
+								srcSurface->Release();
+							}
+
+							systemMemTex->Release();
+						}
+						else {
+							Logger::LogError() << "[UpdateTexture] CreateTexture failed. HRESULT: 0x" << std::hex << hr;
+						}
+					}
+				}
+				surface->Release();
+			}
+			else {
+				Logger::LogError() << "[UpdateTexture] Failed to get surface level 0";
+			}
 			break;
+		}
 		case D3DRTYPE_VOLUMETEXTURE:
-			pSourceTexture = static_cast<m_IDirect3DVolumeTexture9 *>(pSourceTexture)->GetProxyInterface();
+			pSourceTexture = static_cast<m_IDirect3DVolumeTexture9*>(pSourceTexture)->GetProxyInterface();
 			break;
 		case D3DRTYPE_CUBETEXTURE:
-			pSourceTexture = static_cast<m_IDirect3DCubeTexture9 *>(pSourceTexture)->GetProxyInterface();
+			pSourceTexture = static_cast<m_IDirect3DCubeTexture9*>(pSourceTexture)->GetProxyInterface();
 			break;
 		default:
 			return D3DERR_INVALIDCALL;
 		}
 	}
+
 	if (pDestinationTexture)
 	{
 		switch (pDestinationTexture->GetType())
 		{
 		case D3DRTYPE_TEXTURE:
-			pDestinationTexture = static_cast<m_IDirect3DTexture9 *>(pDestinationTexture)->GetProxyInterface();
+			pDestinationTexture = static_cast<m_IDirect3DTexture9*>(pDestinationTexture)->GetProxyInterface();
 			break;
 		case D3DRTYPE_VOLUMETEXTURE:
-			pDestinationTexture = static_cast<m_IDirect3DVolumeTexture9 *>(pDestinationTexture)->GetProxyInterface();
+			pDestinationTexture = static_cast<m_IDirect3DVolumeTexture9*>(pDestinationTexture)->GetProxyInterface();
 			break;
 		case D3DRTYPE_CUBETEXTURE:
-			pDestinationTexture = static_cast<m_IDirect3DCubeTexture9 *>(pDestinationTexture)->GetProxyInterface();
+			pDestinationTexture = static_cast<m_IDirect3DCubeTexture9*>(pDestinationTexture)->GetProxyInterface();
 			break;
 		default:
 			return D3DERR_INVALIDCALL;
