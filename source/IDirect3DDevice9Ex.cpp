@@ -703,9 +703,9 @@ HRESULT m_IDirect3DDevice9Ex::UpdateTexture(IDirect3DBaseTexture9* pSourceTextur
 
 									CreateDirectoryA(folder.c_str(), nullptr);
 
-									std::string fileName = folder + "Texture_" + std::to_string(texId++) + ".dds";
+									std::string fileName = folder + "Texture_" + std::to_string(texId++) + ".png";
 
-									HRESULT saveHr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_DDS, systemMemTex, nullptr);
+									HRESULT saveHr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_PNG, systemMemTex, nullptr);
 									if (SUCCEEDED(saveHr))
 										Logger::LogInfo() << "[UpdateTexture] Saved: " << fileName;
 									else
