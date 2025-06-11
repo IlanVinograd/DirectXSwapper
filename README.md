@@ -2,6 +2,12 @@
 
 **DirectXSwapper** is a lightweight DirectX proxy tool for **real-time mesh and texture extraction**, overlay rendering, and debugging in Direct3D9 games.
 
+> [!Caution]
+>  This tool is intended solely for research and educational purposes.  
+>  It allows exploration of level geometry not normally visible in-game.  
+>  It is not designed for piracy or unauthorized asset distribution.  
+
+
 ## Preview
 
 ![https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation3.gif](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation4.gif)
