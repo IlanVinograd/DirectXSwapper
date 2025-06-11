@@ -11,6 +11,7 @@
 
 -  **[06/08/2025]** Added **texture export** support for Direct3D9 – bound textures can now be saved as `.png`
 -  **[06/11/2025]** Critical fix: incorrect UV extraction resolved
+-  **[06/11/2025]** Added support for `D3DPT_TRIANGLESTRIP` primitive type
   
 ## Features
 
