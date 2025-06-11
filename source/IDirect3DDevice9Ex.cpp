@@ -626,22 +626,74 @@ HRESULT m_IDirect3DDevice9Ex::GetTextureStageState(DWORD Stage, D3DTEXTURESTAGES
 	return ProxyInterface->GetTextureStageState(Stage, Type, pValue);
 }
 
-HRESULT m_IDirect3DDevice9Ex::SetTexture(DWORD Stage, IDirect3DBaseTexture9 *pTexture)
+HRESULT m_IDirect3DDevice9Ex::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTexture)
 {
 	if (pTexture)
 	{
 		switch (pTexture->GetType())
 		{
 		case D3DRTYPE_TEXTURE:
-			pTexture = static_cast<m_IDirect3DTexture9 *>(pTexture)->GetProxyInterface();
+		{
+			auto* wrapper = static_cast<m_IDirect3DTexture9*>(pTexture);
+			IDirect3DTexture9* realTex = wrapper->GetProxyInterface();
+
+			D3DSURFACE_DESC desc;
+			if (SUCCEEDED(realTex->GetLevelDesc(0, &desc)))
+			{
+				D3DFORMAT format = desc.Format;
+				D3DPOOL pool = desc.Pool;
+
+				if (format == D3DFMT_DXT1 ||
+					format == D3DFMT_DXT5 ||
+					format == D3DFMT_A8R8G8B8 ||
+					format == D3DFMT_X8R8G8B8)
+				{
+					if (pool == D3DPOOL_DEFAULT)
+					{
+						// Logger::LogInfo() << "[SetTexture] Skipping GPU-only texture (D3DPOOL_DEFAULT)";
+					}
+					else
+					{
+						static std::unordered_set<IDirect3DTexture9*> dumped;
+
+						if (dumped.count(realTex) == 0)
+						{
+							dumped.insert(realTex);
+
+							CreateDirectoryA("Textures", nullptr);
+
+							static int counter = 0;
+							std::string fileName = "Textures/SetTex_" + std::to_string(counter++) + ".png";
+
+							HRESULT hr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_PNG, realTex, nullptr);
+							if (SUCCEEDED(hr))
+								Logger::LogInfo() << "[SetTexture] Saved texture to: " << fileName;
+							else
+								Logger::LogError() << "[SetTexture] Failed to save: " << fileName << ", HRESULT: 0x" << std::hex << hr;
+						}
+					}
+				}
+				else
+				{
+					// Logger::LogInfo() << "[SetTexture] Not target format. Format: 0x" << std::hex << format;
+				}
+			}
+			else
+			{
+				Logger::LogError() << "[SetTexture] Failed to GetLevelDesc";
+			}
+
+			pTexture = wrapper->GetProxyInterface();
 			break;
+		}
 		case D3DRTYPE_VOLUMETEXTURE:
-			pTexture = static_cast<m_IDirect3DVolumeTexture9 *>(pTexture)->GetProxyInterface();
+			pTexture = static_cast<m_IDirect3DVolumeTexture9*>(pTexture)->GetProxyInterface();
 			break;
 		case D3DRTYPE_CUBETEXTURE:
-			pTexture = static_cast<m_IDirect3DCubeTexture9 *>(pTexture)->GetProxyInterface();
+			pTexture = static_cast<m_IDirect3DCubeTexture9*>(pTexture)->GetProxyInterface();
 			break;
 		default:
+			Logger::LogError() << "[SetTexture] Unknown texture type.";
 			return D3DERR_INVALIDCALL;
 		}
 	}
