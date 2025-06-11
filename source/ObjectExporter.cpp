@@ -77,8 +77,6 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 	}
 
 	const size_t vertexCount = obj.vertexData.size() / obj.stride;
-	const size_t indexCount = obj.primitiveCount * 3;
-
 	bool hasNormals = obj.stride >= 24;
 	bool hasUVs = obj.stride >= 32;
 
@@ -97,7 +95,6 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 		Logger::LogInfo() << oss.str();
 	}
 	Logger::LogInfo() << "========================";
-
 
 	for (size_t i = 0; i < vertexCount; ++i) {
 		const uint8_t* base = &obj.vertexData[i * obj.stride];
@@ -129,23 +126,58 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 		file << "f " << formatIndex(i0) << " " << formatIndex(i1) << " " << formatIndex(i2) << "\n";
 		};
 
-	if (obj.index32bit) {
-		const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
-		for (size_t i = 0; i < indexCount; i += 3) {
-			uint32_t i0 = indices[obj.startIndex + i + 0];
-			uint32_t i1 = indices[obj.startIndex + i + 1];
-			uint32_t i2 = indices[obj.startIndex + i + 2];
-			writeFace(i0, i1, i2);
+	if (obj.primitiveType == D3DPT_TRIANGLELIST) {
+		size_t indexCount = obj.primitiveCount * 3;
+
+		if (obj.index32bit) {
+			const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
+			for (size_t i = 0; i < indexCount; i += 3) {
+				uint32_t i0 = indices[obj.startIndex + i + 0];
+				uint32_t i1 = indices[obj.startIndex + i + 1];
+				uint32_t i2 = indices[obj.startIndex + i + 2];
+				writeFace(i0, i1, i2);
+			}
+		}
+		else {
+			const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
+			for (size_t i = 0; i < indexCount; i += 3) {
+				uint32_t i0 = static_cast<uint32_t>(indices[obj.startIndex + i + 0]);
+				uint32_t i1 = static_cast<uint32_t>(indices[obj.startIndex + i + 1]);
+				uint32_t i2 = static_cast<uint32_t>(indices[obj.startIndex + i + 2]);
+				writeFace(i0, i1, i2);
+			}
+		}
+	}
+	else if (obj.primitiveType == D3DPT_TRIANGLESTRIP) {
+		size_t stripLength = obj.primitiveCount + 2;
+
+		if (obj.index32bit) {
+			const uint32_t* indices = reinterpret_cast<const uint32_t*>(obj.indexData.data());
+			for (size_t i = 0; i < obj.primitiveCount; ++i) {
+				uint32_t i0 = indices[obj.startIndex + i + 0];
+				uint32_t i1 = indices[obj.startIndex + i + 1];
+				uint32_t i2 = indices[obj.startIndex + i + 2];
+				if (i % 2 == 0)
+					writeFace(i0, i1, i2);
+				else
+					writeFace(i1, i0, i2);
+			}
+		}
+		else {
+			const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
+			for (size_t i = 0; i < obj.primitiveCount; ++i) {
+				uint32_t i0 = static_cast<uint32_t>(indices[obj.startIndex + i + 0]);
+				uint32_t i1 = static_cast<uint32_t>(indices[obj.startIndex + i + 1]);
+				uint32_t i2 = static_cast<uint32_t>(indices[obj.startIndex + i + 2]);
+				if (i % 2 == 0)
+					writeFace(i0, i1, i2);
+				else
+					writeFace(i1, i0, i2);
+			}
 		}
 	}
 	else {
-		const uint16_t* indices = reinterpret_cast<const uint16_t*>(obj.indexData.data());
-		for (size_t i = 0; i < indexCount; i += 3) {
-			uint32_t i0 = static_cast<uint32_t>(indices[obj.startIndex + i + 0]);
-			uint32_t i1 = static_cast<uint32_t>(indices[obj.startIndex + i + 1]);
-			uint32_t i2 = static_cast<uint32_t>(indices[obj.startIndex + i + 2]);
-			writeFace(i0, i1, i2);
-		}
+		Logger::LogInfo() << "[SaveToObj] Unsupported primitive type: " << obj.primitiveType;
 	}
 }
 
