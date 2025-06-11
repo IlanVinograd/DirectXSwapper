@@ -115,7 +115,6 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 			if (std::isfinite(uv[0]) && std::isfinite(uv[1])) {
 				file << "vt " << uv[0] << " " << 1.0f - uv[1] << "\n";
 			}
-
 		}
 	}
 
