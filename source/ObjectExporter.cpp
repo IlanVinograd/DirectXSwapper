@@ -11,6 +11,59 @@ std::unordered_set<size_t> ObjectExporter::seenVertexHashes;
 
 thread_local std::vector<uint8_t> tempVB;
 
+size_t FindUVOffsetSmart(const ObjectDescriptor& obj) {
+	static const std::unordered_map<size_t, size_t> knownUVOffsets = {
+		{32, 16},
+		{64, 28},
+		{80, 32},
+	};
+
+	if (auto it = knownUVOffsets.find(obj.stride); it != knownUVOffsets.end()) {
+		Logger::LogInfo() << "[UVOffset] Using known offset for stride " << obj.stride << ": " << it->second;
+		return it->second;
+	}
+
+	const size_t vertexCount = obj.vertexData.size() / obj.stride;
+	const size_t floatStride = obj.stride / sizeof(float);
+	const size_t maxOffset = floatStride - 1;
+
+	std::unordered_map<size_t, size_t> validCounts;
+
+	for (size_t i = 0; i < min(vertexCount, size_t(50)); ++i) {
+		const uint8_t* base = &obj.vertexData[i * obj.stride];
+		const float* f = reinterpret_cast<const float*>(base);
+
+		for (size_t offset = 0; offset < maxOffset; ++offset) {
+			float u = f[offset];
+			float v = f[offset + 1];
+
+			if (std::isfinite(u) && std::isfinite(v) &&
+				u >= 0.0f && u <= 1.0f &&
+				v >= 0.0f && v <= 1.0f &&
+				!(u == 0.0f && v == 0.0f) &&
+				u != v) {
+				validCounts[offset]++;
+			}
+		}
+	}
+
+	size_t bestOffset = 0;
+	size_t bestScore = 0;
+
+	for (auto& [offset, count] : validCounts) {
+		if (count > bestScore) {
+			bestScore = count;
+			bestOffset = offset;
+		}
+	}
+
+	size_t byteOffset = bestOffset * sizeof(float);
+	Logger::LogInfo() << "[UVOffset] Heuristic result: float offset = " << bestOffset << " (byte offset = " << byteOffset << ")"
+		<< " [match in " << bestScore << " of " << min(vertexCount, size_t(50)) << " vertices]";
+
+	return byteOffset;
+}
+
 void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 	if (obj.vertexData.empty() || obj.indexData.empty() || obj.stride < 12) {
 		Logger::LogInfo() << "[SaveToObj] Invalid or empty data.";
@@ -29,6 +82,23 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 	bool hasNormals = obj.stride >= 24;
 	bool hasUVs = obj.stride >= 32;
 
+	Logger::LogInfo() << "===== Vertex Dump =====";
+	Logger::LogInfo() << "Vertex count: " << vertexCount << ", Stride: " << obj.stride;
+
+	const size_t numToPrint = min(vertexCount, size_t(3));
+	for (size_t i = 0; i < numToPrint; ++i) {
+		const uint8_t* base = &obj.vertexData[i * obj.stride];
+		std::ostringstream oss;
+		oss << "Vertex " << i << ": ";
+		for (size_t offset = 0; offset + 4 <= obj.stride; offset += 4) {
+			float value = *reinterpret_cast<const float*>(base + offset);
+			oss << std::fixed << std::setprecision(4) << value << " ";
+		}
+		Logger::LogInfo() << oss.str();
+	}
+	Logger::LogInfo() << "========================";
+
+
 	for (size_t i = 0; i < vertexCount; ++i) {
 		const uint8_t* base = &obj.vertexData[i * obj.stride];
 		const float* pos = reinterpret_cast<const float*>(base + 0);
@@ -40,8 +110,11 @@ void ObjectExporter::SaveToObj(ObjectDescriptor& obj, const std::string& path) {
 			file << "vn " << norm[0] << " " << norm[2] << " " << -norm[1] << "\n";
 		}
 		if (hasUVs) {
-			const float* uv = reinterpret_cast<const float*>(base + 24);
-			file << "vt " << uv[1] << " " << 1.0f - uv[2] << "\n";
+			size_t uvOffset = FindUVOffsetSmart(obj);
+			const float* uv = reinterpret_cast<const float*>(base + uvOffset);
+			if (std::isfinite(uv[0]) && std::isfinite(uv[1])) {
+				file << "vt " << uv[0] << " " << 1.0f - uv[1] << "\n";
+			}
 		}
 	}
 
