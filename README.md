@@ -10,14 +10,15 @@
 ## Project Updates
 
 -  **[06/08/2025]** Added **texture export** support for Direct3D9 – bound textures can now be saved as `.png`
+-  **[06/11/2025]** Critical fix: incorrect UV extraction resolved
   
 ## Features
 
-- 🔹 Extract mesh geometry to `.obj` files  
-- 🔹 Save bound textures as `.png`  
-- 🔹 In-game overlay using **ImGui**  
-- 🔹 Live debug info and filtering  
-- 🔹 Minimal performance overhead  
+- Extract mesh geometry to `.obj` files  
+- Save bound textures as `.png`  
+- In-game overlay using **ImGui**  
+- Live debug info and filtering  
+- Minimal performance overhead  
 
 ## Usage
 
