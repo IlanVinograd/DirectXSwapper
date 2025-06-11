@@ -28,6 +28,8 @@ struct ObjectDescriptor {
 	bool index32bit;
 };
 
+size_t FindUVOffsetSmart(const ObjectDescriptor& obj);
+
 class ObjectExporter {
 public:
 	static void SaveToObj(ObjectDescriptor& obj, const std::string& path);
