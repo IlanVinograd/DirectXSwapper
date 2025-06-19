@@ -247,6 +247,7 @@
     <ClInclude Include="..\source\IDirect3DVolume9.h" />
     <ClInclude Include="..\source\IDirect3DVolumeTexture9.h" />
     <ClInclude Include="..\source\ObjectExporter.h" />
+    <ClInclude Include="..\source\utilities.h" />
     <ClInclude Include="..\source\VersionInfo.h" />
     <ClInclude Include="..\source\d3d9.h" />
     <ClInclude Include="..\source\helpers.h" />

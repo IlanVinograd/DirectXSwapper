@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "ObjectExporter.h"
 #include "OverlayUI.h"
+#include "utilities.h"
 
 thread_local std::vector<uint8_t> tempIB;
 
@@ -515,6 +516,13 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
 	};
 
+	IDirect3DTexture9* tex;
+	ProxyInterface->GetTexture(0, (IDirect3DBaseTexture9**)&tex);
+	Logger::LogInfo() << "texture ID: " << PointerToString(tex);
+
+	if (tex) tex->Release();
+
+
 	if(Button_2) ObjectExporter::LockAndFillVertexBuffer(obj, vb, stride);
 	
 	if (Button_1) {
@@ -662,8 +670,7 @@ HRESULT m_IDirect3DDevice9Ex::SetTexture(DWORD Stage, IDirect3DBaseTexture9* pTe
 
 							CreateDirectoryA("Textures", nullptr);
 
-							static int counter = 0;
-							std::string fileName = "Textures/SetTex_" + std::to_string(counter++) + ".png";
+							std::string fileName = "Textures/SetTex_" + PointerToString(realTex) + ".png";
 
 							HRESULT hr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_PNG, realTex, nullptr);
 							if (SUCCEEDED(hr))
@@ -750,12 +757,11 @@ HRESULT m_IDirect3DDevice9Ex::UpdateTexture(IDirect3DBaseTexture9* pSourceTextur
 							{
 								if (SUCCEEDED(D3DXLoadSurfaceFromSurface(dstSurface, nullptr, nullptr, srcSurface, nullptr, nullptr, D3DX_DEFAULT, 0)))
 								{
-									static int texId = 0;
 									std::string folder = "Textures/";
 
 									CreateDirectoryA(folder.c_str(), nullptr);
 
-									std::string fileName = folder + "Texture_" + std::to_string(texId++) + ".png";
+									std::string fileName = folder + "SetTex_" + PointerToString(surface) + ".png";
 
 									HRESULT saveHr = D3DXSaveTextureToFileA(fileName.c_str(), D3DXIFF_PNG, systemMemTex, nullptr);
 									if (SUCCEEDED(saveHr))

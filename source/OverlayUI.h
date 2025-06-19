@@ -26,7 +26,8 @@ extern bool Button_2;
 
 extern ImFont* g_FontLarge;
 
-extern int Filter;
+extern int fromFilter;
+extern int toFilter;
 
 static int selectedObjIndex = -1;
 static std::vector<std::string> objFiles;
