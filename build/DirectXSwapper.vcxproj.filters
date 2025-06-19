@@ -42,6 +42,7 @@
     </ClCompile>
     <ClCompile Include="..\source\OverlayUI.h" />
     <ClCompile Include="..\source\OverlayUI.cpp" />
+    <ClCompile Include="..\source\ObjectExporter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AddressLookupTable.h" />
@@ -89,6 +90,8 @@
     <ClInclude Include="..\imgui\backends\imgui_impl_win32.h">
       <Filter>imgui\backends</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\ObjectExporter.h" />
+    <ClInclude Include="..\source\utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\source\VersionInfo.rc" />

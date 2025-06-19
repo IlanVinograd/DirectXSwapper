@@ -292,7 +292,7 @@ void ObjectExporter::ThreadMain() {
 
 			size_t estimatedSize = obj.primitiveCount * 3 * obj.stride;
 
-			if (estimatedSize < Filter) {
+			if (estimatedSize < fromFilter || estimatedSize > toFilter) {
 				lock.lock();
 				continue;
 			}

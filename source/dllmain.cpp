@@ -241,7 +241,7 @@ HRESULT m_IDirect3DDevice9Ex::Present(CONST RECT* pSourceRect, CONST RECT* pDest
     menuBar();
     menuTab();
 
-    //// End Logic
+    // End Logic
 
     ImGui::End();
     renderFrame();

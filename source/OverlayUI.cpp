@@ -7,7 +7,8 @@ bool Button_2 = false;
 
 ImFont* g_FontLarge = nullptr;
 
-int Filter = 0;
+int fromFilter = 0;
+int toFilter = 1000000;
 
 void InitGUI(HWND& g_hFocusWindow, LPDIRECT3DDEVICE9EX& ProxyInterface) {
     if (!g_ImGuiInitialized)
@@ -163,7 +164,8 @@ void geometryLogic() {
             Button_2 = !Button_2;
 
         ImGui::Text("Filter");
-        ImGui::SliderInt("Object Size", &Filter, 0, 1000000);
+        ImGui::SliderInt("Object From Size", &fromFilter, 0, 1000000);
+        ImGui::SliderInt("Object To Size", &toFilter, 0, 1000000);
 
         ImGui::Separator();
 
