@@ -19,8 +19,8 @@ size_t FindUVOffsetSmart(const ObjectDescriptor& obj) {
 	};
 
 	if (auto it = knownUVOffsets.find(obj.stride); it != knownUVOffsets.end()) {
-		Logger::LogInfo() << "[UVOffset] Using known offset for stride " << obj.stride << ": " << it->second;
-		return it->second;
+		/*Logger::LogInfo() << "[UVOffset] Using known offset for stride " << obj.stride << ": " << it->second;
+		return it->second;*/
 	}
 
 	const size_t vertexCount = obj.vertexData.size() / obj.stride;
@@ -58,8 +58,8 @@ size_t FindUVOffsetSmart(const ObjectDescriptor& obj) {
 	}
 
 	size_t byteOffset = bestOffset * sizeof(float);
-	Logger::LogInfo() << "[UVOffset] Heuristic result: float offset = " << bestOffset << " (byte offset = " << byteOffset << ")"
-		<< " [match in " << bestScore << " of " << min(vertexCount, size_t(50)) << " vertices]";
+	/*Logger::LogInfo() << "[UVOffset] Heuristic result: float offset = " << bestOffset << " (byte offset = " << byteOffset << ")"
+		<< " [match in " << bestScore << " of " << min(vertexCount, size_t(50)) << " vertices]";*/
 
 	return byteOffset;
 }

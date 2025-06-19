@@ -5,6 +5,7 @@
 #include "utilities.h"
 
 thread_local std::vector<uint8_t> tempIB;
+D3DMATRIX g_lastSetTransform = IdentityMatrix();
 
 HRESULT m_IDirect3DDevice9Ex::QueryInterface(REFIID riid, void** ppvObj)
 {
@@ -251,8 +252,14 @@ HRESULT m_IDirect3DDevice9Ex::SetRenderTarget(THIS_ DWORD RenderTargetIndex, IDi
 	return ProxyInterface->SetRenderTarget(RenderTargetIndex, pRenderTarget);
 }
 
-HRESULT m_IDirect3DDevice9Ex::SetTransform(D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX *pMatrix)
+HRESULT m_IDirect3DDevice9Ex::SetTransform(D3DTRANSFORMSTATETYPE State, const D3DMATRIX* pMatrix)
 {
+	if (State == D3DTS_WORLD && pMatrix) {
+		g_lastSetTransform = *pMatrix;
+		Logger::LogInfo() << "[SetTransform] Captured FFP world matrix:";
+		Logger::LogInfo() << MatrixToString(g_lastSetTransform);
+	}
+
 	return ProxyInterface->SetTransform(State, pMatrix);
 }
 
@@ -501,33 +508,53 @@ HRESULT m_IDirect3DDevice9Ex::DrawIndexedPrimitive(
 	if (tempIB.size() < ibDesc.Size)
 		tempIB.resize(ibDesc.Size);
 	memcpy(tempIB.data(), indexData, ibDesc.Size);
-
 	ib->Unlock();
-	
+
 	ObjectDescriptor obj = {
-	.hash = 0,
-	.vertexData = {},
-	.indexData = std::move(tempIB),
-	.stride = stride,
-	.primitiveType = Type,
-	.baseVertexIndex = BaseVertexIndex,
-	.startIndex = StartIndex,
-	.primitiveCount = PrimitiveCount,
-	.index32bit = (ibDesc.Format == D3DFMT_INDEX32)
+		.hash = 0,
+		.vertexData = {},
+		.indexData = std::move(tempIB),
+		.stride = stride,
+		.primitiveType = Type,
+		.baseVertexIndex = BaseVertexIndex,
+		.startIndex = StartIndex,
+		.primitiveCount = PrimitiveCount,
+		.index32bit = (ibDesc.Format == D3DFMT_INDEX32),
+		.transformMatrix = IdentityMatrix()
 	};
+
+	if (Button_2)
+		ObjectExporter::LockAndFillVertexBuffer(obj, vb, stride);
+
+	D3DMATRIX mat = IdentityMatrix();
+	bool foundMatrix = false;
+
+	for (UINT i = 0; i < 256; ++i) {
+		if (SUCCEEDED(ProxyInterface->GetVertexShaderConstantF(i, reinterpret_cast<float*>(&mat), 4))) {
+			if (fabs(mat._41) > 1e-3 || fabs(mat._42) > 1e-3 || fabs(mat._43) > 1e-3) {
+				obj.transformMatrix = mat;
+				foundMatrix = true;
+				Logger::LogInfo() << "[Matrix Source] VertexShaderConstantF reg#" << i;
+				Logger::LogInfo() << FormatMatrixReadable(mat);
+				break;
+			}
+		}
+	}
+
+	if (!foundMatrix) {
+		if (SUCCEEDED(ProxyInterface->GetTransform(D3DTS_WORLD, &mat))) {
+			obj.transformMatrix = mat;
+			Logger::LogInfo() << "[Matrix Source] Fixed Function Pipeline (GetTransform)";
+			Logger::LogInfo() << FormatMatrixReadable(mat);
+		}
+	}
 
 	IDirect3DTexture9* tex;
 	ProxyInterface->GetTexture(0, (IDirect3DBaseTexture9**)&tex);
-	Logger::LogInfo() << "texture ID: " << PointerToString(tex);
-
 	if (tex) tex->Release();
 
-
-	if(Button_2) ObjectExporter::LockAndFillVertexBuffer(obj, vb, stride);
-	
-	if (Button_1) {
+	if (Button_1)
 		ObjectExporter::EnqueueObject(std::move(obj));
-	}
 
 	vb->Release();
 	ib->Release();
@@ -729,9 +756,9 @@ HRESULT m_IDirect3DDevice9Ex::UpdateTexture(IDirect3DBaseTexture9* pSourceTextur
 				D3DSURFACE_DESC desc;
 				if (SUCCEEDED(surface->GetDesc(&desc)))
 				{
-					Logger::LogInfo() << "[UpdateTexture] Format: 0x" << std::hex << desc.Format
+					/*Logger::LogInfo() << "[UpdateTexture] Format: 0x" << std::hex << desc.Format
 						<< ", Width: " << std::dec << desc.Width
-						<< ", Height: " << desc.Height;
+						<< ", Height: " << desc.Height;*/
 
 					if (desc.Format == D3DFMT_DXT1 || desc.Format == D3DFMT_DXT5)
 					{
@@ -946,8 +973,27 @@ HRESULT m_IDirect3DDevice9Ex::GetVertexShaderConstantB(THIS_ UINT StartRegister,
 	return ProxyInterface->GetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
 }
 
-HRESULT m_IDirect3DDevice9Ex::SetVertexShaderConstantF(THIS_ UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
+HRESULT m_IDirect3DDevice9Ex::SetVertexShaderConstantF(UINT StartRegister, const float* pConstantData, UINT Vector4fCount)
 {
+	if (Vector4fCount >= 4) // минимум 4 вектора = 4x4 матрица
+	{
+		const D3DMATRIX* matrix = reinterpret_cast<const D3DMATRIX*>(pConstantData);
+
+		// Опционально: простая эвристика — нормальный диапазон координат
+		const float tx = matrix->_41;
+		const float ty = matrix->_42;
+		const float tz = matrix->_43;
+
+		/*if (abs(tx) < 10000.0f && abs(ty) < 10000.0f && abs(tz) < 10000.0f)
+		{
+			Logger::LogInfo() << "[SetVertexShaderConstantF] reg#" << StartRegister
+				<< "  matrix: [ " << matrix->_11 << " " << matrix->_12 << " " << matrix->_13 << " " << matrix->_14
+				<< " | " << matrix->_21 << " " << matrix->_22 << " " << matrix->_23 << " " << matrix->_24
+				<< " | " << matrix->_31 << " " << matrix->_32 << " " << matrix->_33 << " " << matrix->_34
+				<< " | " << matrix->_41 << " " << matrix->_42 << " " << matrix->_43 << " " << matrix->_44 << " ]";
+		}*/
+	}
+
 	return ProxyInterface->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 }
 

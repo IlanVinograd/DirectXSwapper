@@ -26,6 +26,8 @@ struct ObjectDescriptor {
 	UINT startIndex;
 	UINT primitiveCount;
 	bool index32bit;
+
+	D3DMATRIX transformMatrix;
 };
 
 size_t FindUVOffsetSmart(const ObjectDescriptor& obj);
