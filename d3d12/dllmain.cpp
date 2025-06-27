@@ -45,7 +45,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
             Logger::LogInfo() << "Loading " << path << std::endl;
             d3d12dll = LoadLibraryA(path);
 
-            MessageBox(nullptr, L"DLL injected", L"INFO", MB_OK | MB_ICONINFORMATION);
+            MessageBox(nullptr, "DLL injected",  "INFO", MB_OK | MB_ICONINFORMATION);
 
             m_D3D12CreateDevice = (PFN_D3D12CreateDevice)GetProcAddress(d3d12dll, "D3D12CreateDevice");
             m_SetAppCompatStringPointer = GetProcAddress(d3d12dll,"SetAppCompatStringPointer");

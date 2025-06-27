@@ -89,7 +89,7 @@ project "d3d12"
     }
 
     vpaths {
-        ["d3d12"]    = { "d3d12/**.cpp", "d3d12/**.h" },
+        ["d3d12"]           = { "d3d12/**.cpp", "d3d12/**.h" },
         ["ASM Files"]       = { "d3d12/**.asm" },
         ["Resource Files"]  = { "d3d12/**.rc", "d3d12/**.def" }
     }
@@ -112,11 +112,10 @@ project "d3d12"
         optimize "On"
 
     filter "platforms:Win32"
-        architecture "x86"
-        targetdir "data"
-        libdirs {}
+        -- Disable Win32 build
+        removefiles { "**" }
+        kind "None"
 
     filter "platforms:Win64"
         architecture "x64"
         targetdir "data/x64"
-        libdirs {}
