@@ -84,28 +84,28 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\data\</OutDir>
-    <IntDir>obj\Win32\Debug\</IntDir>
+    <IntDir>obj\Win32\Debug\d3d9\</IntDir>
     <TargetName>d3d9</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Win64|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\data\x64\</OutDir>
-    <IntDir>obj\Win64\Debug\</IntDir>
+    <IntDir>obj\Win64\Debug\d3d9\</IntDir>
     <TargetName>d3d9</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\data\</OutDir>
-    <IntDir>obj\Win32\Release\</IntDir>
+    <IntDir>obj\Win32\Release\d3d9\</IntDir>
     <TargetName>d3d9</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Win64|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\data\x64\</OutDir>
-    <IntDir>obj\Win64\Release\</IntDir>
+    <IntDir>obj\Win64\Release\d3d9\</IntDir>
     <TargetName>d3d9</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
