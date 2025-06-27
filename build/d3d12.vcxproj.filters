@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ASM Files">
+      <UniqueIdentifier>{F9BA2496-6525-D90C-AE63-8AB21A0DB761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="d3d12">
+      <UniqueIdentifier>{C3392E0F-2F4E-56C0-F8CF-F91F64A352F1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\d3d12\ObjectExporter.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\WrappedCommandList.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\WrappedCommandQueue.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\WrappedDevice.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\d3dx12.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\dllmain.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\d3d12\logger.h">
+      <Filter>d3d12</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\d3d12\Logger.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\d3d12\ObjectExporter.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\d3d12\WrappedCommandList.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\d3d12\WrappedCommandQueue.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\d3d12\WrappedDevice.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\d3d12\dllmain.cpp">
+      <Filter>d3d12</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Masm Include="..\d3d12\call_original.asm">
+      <Filter>ASM Files</Filter>
+    </Masm>
+  </ItemGroup>
+</Project>
