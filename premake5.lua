@@ -1,50 +1,67 @@
 workspace "DirectXSwapper"
-   configurations { "Release", "Debug" }
-   platforms { "Win32", "Win64" }
-   location "build"
-   objdir ("build/obj")
-   buildlog ("build/log/%{prj.name}.log")
-   buildoptions {"-std:c++latest"}
+    configurations { "Debug", "Release" }
+    platforms { "Win32", "Win64" }
+    location "build"
+    objdir ("build/obj")
+    buildlog ("build/log/%{prj.name}.log")
+    buildoptions { "-std:c++latest" }
 
-project "DirectXSwapper"
-   kind "SharedLib"
-   language "C++"
-   targetname "d3d9"
-   targetextension ".dll"
-   characterset ("MBCS")
-   staticruntime "On"
+project "d3d9"
+    kind "SharedLib"
+    language "C++"
+    targetname "d3d9"
+    targetextension ".dll"
+    characterset ("MBCS")
+    staticruntime "On"
 
-   defines {
-      "rsc_CompanyName=\"\"",
-      "rsc_LegalCopyright=\"\"",
-      "rsc_FileVersion=\"1.0.0.0\"",
-      "rsc_ProductVersion=\"1.0.0.0\"",
-      "rsc_InternalName=\"d3d9\"",
-      "rsc_ProductName=\"d3d9\"",
-      "rsc_OriginalFilename=\"d3d9.dll\"",
-      "rsc_FileDescription=\"Direct3D9 Proxy DLL\"",
-      "rsc_UpdateUrl=\"\""
-   }
+    files {
+        "d3d9/*.h",
+        "d3d9/*.cpp",
+        "d3d9/*.rc",
+        "d3d9/*.def",
+        "imgui/*.cpp",
+        "imgui/backends/imgui_impl_dx9.cpp",
+        "imgui/backends/imgui_impl_win32.cpp",
+        "imgui/*.h",
+        "imgui/backends/*.h"
+    }
 
-   files { "source/*.h", "source/*.cpp" }
-   files { "source/*.def" }
-   files { "source/*.rc" }
-   includedirs { "source/dxsdk" }
+    removefiles {
+        "imgui/imgui_demo.cpp"
+    }
 
-   filter "configurations:Debug"
-      defines "DEBUG"
-      symbols "On"
+    includedirs {
+        "d3d9/dxsdk",
+        "imgui",
+        "imgui/backends"
+    }
 
-   filter "configurations:Release"
-      defines "NDEBUG"
-      optimize "On"
+    defines {
+        "rsc_CompanyName=\"\"",
+        "rsc_LegalCopyright=\"\"",
+        "rsc_FileVersion=\"1.0.0.0\"",
+        "rsc_ProductVersion=\"1.0.0.0\"",
+        "rsc_InternalName=\"d3d9\"",
+        "rsc_ProductName=\"d3d9\"",
+        "rsc_OriginalFilename=\"d3d9.dll\"",
+        "rsc_FileDescription=\"Direct3D9 Proxy DLL\"",
+        "rsc_UpdateUrl=\"\""
+    }
 
-   filter "platforms:Win32"
-      architecture "x32"
-      targetdir "data"
-      libdirs { "source/dxsdk/lib/x86" }
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
 
-   filter "platforms:Win64"
-      architecture "x64"
-      targetdir "data/x64"
-      libdirs { "source/dxsdk/lib/x64" }
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
+
+    filter "platforms:Win32"
+        architecture "x86"
+        targetdir "data"
+        libdirs { "d3d9/dxsdk/lib/x86" }
+
+    filter "platforms:Win64"
+        architecture "x64"
+        targetdir "data/x64"
+        libdirs { "d3d9/dxsdk/lib/x64" }
