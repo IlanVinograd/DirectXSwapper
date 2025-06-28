@@ -4,6 +4,9 @@
     <Filter Include="ASM Files">
       <UniqueIdentifier>{F9BA2496-6525-D90C-AE63-8AB21A0DB761}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{C0DE3DEC-ACAC-31F2-9540-A21881AD0D57}</UniqueIdentifier>
+    </Filter>
     <Filter Include="d3d12">
       <UniqueIdentifier>{C3392E0F-2F4E-56C0-F8CF-F91F64A352F1}</UniqueIdentifier>
     </Filter>
@@ -50,6 +53,11 @@
     <ClCompile Include="..\d3d12\dllmain.cpp">
       <Filter>d3d12</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\d3d12\d3d12.def">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Masm Include="..\d3d12\call_original.asm">
