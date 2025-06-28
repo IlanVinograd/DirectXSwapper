@@ -553,7 +553,7 @@ void STDMETHODCALLTYPE WrappedCommandList::SetGraphicsRootShaderResourceView(UIN
     for (const auto& entry : g_Resources) {
         if (BufferLocation >= entry.base && BufferLocation < entry.base + entry.size) {
             Logger::LogInfo() << "Matched resource: " << entry.resource;
-            // Можешь сохранить это соответствие (например, currentSRV[RootParameterIndex] = entry.resource)
+            
         }
     }
 
