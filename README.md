@@ -64,7 +64,113 @@ It now also includes **experimental support for Direct3D12** (64-bit only) with 
 - Standalone injector application (no manual DLL copying)
 - Export to `.glTF` format
 - Overlay support for D3D12
-  
+
+## Build Instructions
+
+This project is designed to be built using **Microsoft Visual Studio 2022** — not with `g++` or command-line compilers.
+
+This repository contains two projects:
+
+- **`d3d9`**: Full-featured Direct3D9 proxy (supports overlay, texture export, mesh export)  
+- **`d3d12`**: Experimental Direct3D12 proxy (64-bit only, mesh export only)  
+
+You can build both projects using **Visual Studio 2022**.
+
+---
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/IlanVinograd/DirectXSwapper.git
+cd DirectXSwapper
+```
+
+### 2. Open the Project in Visual Studio
+
+1. Open **Visual Studio 2022**  
+2. Go to **File → Open → Project/Solution...**  
+3. Select the solution file:  
+   ```
+   DirectXSwapper/DirectXSwapper.sln
+   ```
+4. Visual Studio will load the two subprojects:
+   - `d3d9`
+   - `d3d12`
+
+
+---
+
+### 3. Configure the Build
+
+At the top of Visual Studio:
+
+- **Configuration**: Choose `Release` (recommended) not `Debug`
+- **Platform**:
+  - For `d3d9`: choose either `Win32` or `Win64`
+  - For `d3d12`: choose only `x64` (32-bit is **not supported**)
+
+---
+
+### 4. Build the Project
+
+Use the menu:
+
+```
+Build → Build Solution
+```
+
+---
+
+### 5. Locate the Output DLL
+
+After building, the compiled DLLs will be found in the `data` folder inside the repository:
+
+- **32-bit (`x32`) build**:
+  ```
+  DirectXSwapper\data\d3d9.dll
+  ```
+
+- **64-bit (`x64`) build**:
+  ```
+  DirectXSwapper\data\x64\d3d9.dll
+  DirectXSwapper\data\x64\d3d12.dll
+  ```
+
+> 📝 **Note:**
+> - `d3d9` supports both **32-bit** and **64-bit** builds  
+> - `d3d12` supports **64-bit only**
+
+---
+
+### 6. Use the DLL
+
+Copy the compiled DLL (`d3d9.dll` or `d3d12.dll`) into the game folder — next to the game’s `.exe` file:
+
+```text
+C:\Games\SomeGame\ → paste the DLL here
+```
+
+### Rebuild with Premake (Optional)
+
+This project also includes support for **Premake5**, which can be used to regenerate the Visual Studio solution and project files from `premake5.lua`.
+
+#### To rebuild the solution manually:
+
+1. Make sure you have `premake5.exe` in the project root.
+2. Run the following in Command Prompt:
+
+```bash
+premake5.exe vs2022
+```
+
+This will generate the Visual Studio 2022 `.sln` and `.vcxproj` files under the `build/` directory.
+
+You can now open `build/DirectXSwapper.sln` and build it as described above.
+
+> ⚠️ **You do not need to run Premake if you're using the provided `.sln`** in the root folder — it's already generated.
+
+Premake is useful only if you're modifying the project structure or adding new files and want to regenerate project files automatically.
+
 ## Credits
 
 Special thanks to **Elisha Riedlinger** for foundational work and architectural references used in this project.
