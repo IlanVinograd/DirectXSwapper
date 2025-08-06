@@ -136,7 +136,7 @@ After building, the compiled DLLs will be found in the `data` folder inside the 
   DirectXSwapper\data\x64\d3d12.dll
   ```
 
-> 📝 **Note:**
+> **Note:**
 > - `d3d9` supports both **32-bit** and **64-bit** builds  
 > - `d3d12` supports **64-bit only**
 
