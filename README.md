@@ -67,7 +67,7 @@ It now also includes **experimental support for Direct3D12** (64-bit only) with 
 
 ## Build Instructions
 
-This project is designed to be built using **Microsoft Visual Studio 2022** — not with `g++` or command-line compilers.
+This project is designed to be built using **Microsoft Visual Studio 2022** not with `g++` or command-line compilers.
 
 This repository contains two projects:
 
@@ -144,7 +144,7 @@ After building, the compiled DLLs will be found in the `data` folder inside the 
 
 ### 6. Use the DLL
 
-Copy the compiled DLL (`d3d9.dll` or `d3d12.dll`) into the game folder — next to the game’s `.exe` file:
+Copy the compiled DLL (`d3d9.dll` or `d3d12.dll`) into the game folder next to the game’s `.exe` file:
 
 ```text
 C:\Games\SomeGame\ → paste the DLL here
@@ -167,7 +167,7 @@ This will generate the Visual Studio 2022 `.sln` and `.vcxproj` files under the 
 
 You can now open `build/DirectXSwapper.sln` and build it as described above.
 
-> ⚠️ **You do not need to run Premake if you're using the provided `.sln`** in the root folder — it's already generated.
+> ⚠️ **You do not need to run Premake if you're using the provided `.sln`** in the root folder it's already generated.
 
 Premake is useful only if you're modifying the project structure or adding new files and want to regenerate project files automatically.
 
