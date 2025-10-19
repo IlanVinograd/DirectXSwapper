@@ -93,12 +93,17 @@ HRESULT Wrap_D3D12CreateDevice(IUnknown* pAdapter, D3D_FEATURE_LEVEL MinimumFeat
 
     original = m_D3D12CreateDevice(pAdapter, ModifiedFeatureLevel, riid, ppDevice);
     if (original == S_OK) Logger::LogDebug() << "D3D12CreateDevice - Success" << std::endl;
-    if (original == S_FALSE) Logger::LogDebug() << "D3D12CreateDevice - Failed" << std::endl;
+    else if (original == S_FALSE) {
+        Logger::LogDebug() << "D3D12CreateDevice - Failed" << std::endl;
+        return original;
+    }
 
     if(original >= 0x887A0000) Logger::LogError() << "Possible DXGI_ERROR code" << std::endl;
 
-    WrappedD3D12Device* wrapped = new WrappedD3D12Device((ID3D12Device*)*ppDevice);
-    *ppDevice = (ID3D12Device10*)wrapped;
+    if (ppDevice != nullptr) {
+        WrappedD3D12Device* wrapped = new WrappedD3D12Device((ID3D12Device*)*ppDevice);
+        *ppDevice = (ID3D12Device10*)wrapped;
+    }
 
     if (FAILED(original))
         Logger::LogError() << "D3D12CreateDevice failed with HRESULT: 0x" << std::hex << original << std::endl;
