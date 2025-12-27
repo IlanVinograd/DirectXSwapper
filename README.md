@@ -1,6 +1,6 @@
-# DirectXSwapper
+# Voxel
 
-**DirectXSwapper** is a lightweight DirectX proxy tool for **real-time mesh and texture extraction**, overlay rendering, and debugging in Direct3D9 games.  
+**Voxel** is a lightweight DirectX proxy tool for **real-time mesh and texture extraction**, overlay rendering, and debugging in Direct3D9 games.  
 It now also includes **experimental support for Direct3D12** (64-bit only) with mesh export triggered via the `N` key (overlay not yet supported).
 
 
@@ -12,8 +12,8 @@ It now also includes **experimental support for Direct3D12** (64-bit only) with 
 
 ## Preview
 
-![https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation3.gif](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Animation4.gif)
-![https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/Portal%20gun.png](https://github.com/IlanVinograd/DirectXSwapper/blob/main/Img/img.png)
+![https://github.com/IlanVinograd/Voxel/blob/main/Img/Animation3.gif](https://github.com/IlanVinograd/Voxel/blob/main/Img/Animation4.gif)
+![https://github.com/IlanVinograd/Voxel/blob/main/Img/Portal%20gun.png](https://github.com/IlanVinograd/Voxel/blob/main/Img/img.png)
 
 ## Project Updates
 
@@ -81,8 +81,8 @@ You can build both projects using **Visual Studio 2022**.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/IlanVinograd/DirectXSwapper.git
-cd DirectXSwapper
+git clone https://github.com/IlanVinograd/Voxel.git
+cd Voxel
 ```
 
 ### 2. Open the Project in Visual Studio
@@ -91,7 +91,7 @@ cd DirectXSwapper
 2. Go to **File → Open → Project/Solution...**  
 3. Select the solution file:  
    ```
-   DirectXSwapper/DirectXSwapper.sln
+   Voxel/Voxel.sln
    ```
 4. Visual Studio will load the two subprojects:
    - `d3d9`
@@ -127,13 +127,13 @@ After building, the compiled DLLs will be found in the `data` folder inside the 
 
 - **32-bit (`x32`) build**:
   ```
-  DirectXSwapper\data\d3d9.dll
+  Voxel\data\d3d9.dll
   ```
 
 - **64-bit (`x64`) build**:
   ```
-  DirectXSwapper\data\x64\d3d9.dll
-  DirectXSwapper\data\x64\d3d12.dll
+  Voxel\data\x64\d3d9.dll
+  Voxel\data\x64\d3d12.dll
   ```
 
 > **Note:**
@@ -165,7 +165,7 @@ premake5.exe vs2022
 
 This will generate the Visual Studio 2022 `.sln` and `.vcxproj` files under the `build/` directory.
 
-You can now open `build/DirectXSwapper.sln` and build it as described above.
+You can now open `build/Voxel.sln` and build it as described above.
 
 > ⚠️ **You do not need to run Premake if you're using the provided `.sln`** in the root folder it's already generated.
 
