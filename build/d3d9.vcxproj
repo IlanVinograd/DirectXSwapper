@@ -119,6 +119,7 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>-std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>rsc_CompanyName=\"\";rsc_LegalCopyright=\"\";rsc_FileVersion=\"1.0.0.0\";rsc_ProductVersion=\"1.0.0.0\";rsc_InternalName=\"d3d9\";rsc_ProductName=\"d3d9\";rsc_OriginalFilename=\"d3d9.dll\";rsc_FileDescription=\"Direct3D9 Proxy DLL\";rsc_UpdateUrl=\"\";DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -145,6 +146,7 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>-std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>rsc_CompanyName=\"\";rsc_LegalCopyright=\"\";rsc_FileVersion=\"1.0.0.0\";rsc_ProductVersion=\"1.0.0.0\";rsc_InternalName=\"d3d9\";rsc_ProductName=\"d3d9\";rsc_OriginalFilename=\"d3d9.dll\";rsc_FileDescription=\"Direct3D9 Proxy DLL\";rsc_UpdateUrl=\"\";DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -174,6 +176,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>-std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>rsc_CompanyName=\"\";rsc_LegalCopyright=\"\";rsc_FileVersion=\"1.0.0.0\";rsc_ProductVersion=\"1.0.0.0\";rsc_InternalName=\"d3d9\";rsc_ProductName=\"d3d9\";rsc_OriginalFilename=\"d3d9.dll\";rsc_FileDescription=\"Direct3D9 Proxy DLL\";rsc_UpdateUrl=\"\";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -204,6 +207,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>-std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>rsc_CompanyName=\"\";rsc_LegalCopyright=\"\";rsc_FileVersion=\"1.0.0.0\";rsc_ProductVersion=\"1.0.0.0\";rsc_InternalName=\"d3d9\";rsc_ProductName=\"d3d9\";rsc_OriginalFilename=\"d3d9.dll\";rsc_FileDescription=\"Direct3D9 Proxy DLL\";rsc_UpdateUrl=\"\";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

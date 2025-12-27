@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ASM Files">
-      <UniqueIdentifier>{F9BA2496-6525-D90C-AE63-8AB21A0DB761}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{C0DE3DEC-ACAC-31F2-9540-A21881AD0D57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASM Files">
+      <UniqueIdentifier>{F9BA2496-6525-D90C-AE63-8AB21A0DB761}</UniqueIdentifier>
     </Filter>
     <Filter Include="d3d12">
       <UniqueIdentifier>{C3392E0F-2F4E-56C0-F8CF-F91F64A352F1}</UniqueIdentifier>

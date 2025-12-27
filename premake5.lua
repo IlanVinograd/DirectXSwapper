@@ -1,4 +1,4 @@
-workspace "DirectXSwapper"
+workspace "Voxel"
     configurations { "Debug", "Release" }
     platforms { "Win32", "Win64" }
     location "build"
